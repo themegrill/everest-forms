@@ -83,6 +83,13 @@ Recorded because each cost a debugging cycle and the DOM gives no hint:
   the hook times out. Read the `href` and navigate to it instead — it carries
   the nonce anyway.
 - The **form builder guards navigation** with an unsaved-changes confirm.
+- **`locator.innerText()` auto-waits for the element to exist.** Reading a
+  possibly-absent element (`#login_error`, a notice, an error banner) costs the
+  full actionability timeout every time it is absent — which is usually the
+  passing path. Call `count()` first. This is invisible locally whenever a
+  cached `.auth/admin.json` skips the code, and fatal on CI where every run is
+  cold: delete `tests/e2e/.auth/` before trusting a local run of anything in
+  `auth.setup.ts`.
 - **`networkidle` is not a save signal in the builder.** It is a long-lived page
   that keeps chattering, so the wait resolves immediately and a following
   navigation races the write — the field you just added is silently discarded.

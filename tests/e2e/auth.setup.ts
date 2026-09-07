@@ -54,11 +54,21 @@ setup('authenticate', async ({ browser }) => {
     const landedOn = page.url();
     const bodyText = await page.locator('body').innerText().catch(() => '');
 
-    const loginError = await page
-      .locator('#login_error')
-      .first()
-      .innerText()
-      .catch(() => '');
+    // `count()` before `innerText()`, and this is not a style preference.
+    //
+    // `innerText()` auto-waits for the element to exist, so reading a
+    // *possibly absent* `#login_error` costs the full actionability timeout
+    // (~30s) every time there is no error — which is the successful path and
+    // the fatal path both. That is silent locally, where a cached
+    // `.auth/admin.json` short-circuits this whole block, and fatal on CI,
+    // where every run is a cold login: the diagnostic ate the test's budget
+    // and reported a timeout instead of the cause it was added to surface.
+    //
+    // `count()` resolves immediately and never waits.
+    const loginError =
+      (await page.locator('#login_error').count()) > 0
+        ? await page.locator('#login_error').first().innerText().catch(() => '')
+        : '';
     if (loginError.trim()) {
       throw new Error(
         `WordPress rejected the login for "${user}" at ${url}.\n` +
