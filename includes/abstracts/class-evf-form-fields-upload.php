@@ -783,6 +783,10 @@ abstract class EVF_Form_Fields_Upload extends EVF_Form_Fields {
 	 * @return string $val       Html Value.
 	 */
 	public function html_field_value( $val, $field_val, $form_data = array(), $context = '', $field_meta_key = '' ) {
+		if ( is_array( $field_meta_key ) && isset( $field_meta_key['type'] ) && $field_meta_key['type'] !== $this->type ) {
+			return $val;
+		}
+
 		$meta_key = '';
 		$entry_id = false;
 		$uploads  = wp_upload_dir();
@@ -923,7 +927,7 @@ abstract class EVF_Form_Fields_Upload extends EVF_Form_Fields {
 				$val = implode( 'export-csv' !== $context ? '<br>' : '|', $output[ $meta_key ] );
 			}
 		} elseif ( is_serialized( $field_val ) ) {
-			$value = maybe_unserialize( $field_val );
+			$value = evf_maybe_unserialize( $field_val );
 
 			if ( isset( $value['type'] ) && in_array( $value['type'], array( 'image-upload', 'file-upload' ), true ) ) {
 				$val = empty( $value['file_url'] ) ? '<em>' . esc_html__( '(empty)', 'everest-forms' ) . '</em>' : $val;

@@ -3,7 +3,7 @@
  * Plugin Name: Everest Forms
  * Plugin URI: https://everestforms.net/
  * Description: Easily create contact form, payment form, conversational form, calculator, multi-step form, registration form, quiz form, survey form etc.
- * Version: 3.6.0
+ * Version: 3.6.1
  * Author: Everest Forms
  * Author URI: https://everestforms.net/
  * Text Domain: everest-forms

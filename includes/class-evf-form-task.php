@@ -979,7 +979,7 @@ class EVF_Form_Task {
 					} else {
 						$redirect_url = $settings['external_url'];
 					}
-					$response_data['redirect_url']               = ! empty( $redirect_url ) ? esc_url( $redirect_url ) : 'undefined';
+					$response_data['redirect_url']               = ! empty( $redirect_url ) ? esc_url_raw( $redirect_url ) : 'undefined';
 					$response_data['enable_redirect_in_new_tab'] = isset( $settings['enable_redirect_in_new_tab'] ) ? $settings['enable_redirect_in_new_tab'] : false;
 
 				} elseif ( isset( $settings['redirect_to'] ) && 'custom_page' === $settings['redirect_to'] ) {
@@ -993,7 +993,7 @@ class EVF_Form_Task {
 					} else {
 						$redirect_url = get_page_link( $settings['custom_page'] );
 					}
-					$response_data['redirect_url'] = ! empty( $redirect_url ) ? esc_url( $redirect_url ) : 'undefined';
+					$response_data['redirect_url'] = ! empty( $redirect_url ) ? esc_url_raw( $redirect_url ) : 'undefined';
 
 				}
 			} else {
@@ -1010,7 +1010,7 @@ class EVF_Form_Task {
 					$response_data['message'] = $submission_redirection_process['settings']['successful_form_submission_message'];
 
 				} else {
-					$response_data['redirect_url']               = esc_url( $submission_redirection_process['external_url'] );
+					$response_data['redirect_url']               = esc_url_raw( $submission_redirection_process['external_url'] );
 					$response_data['enable_redirect_in_new_tab'] = isset( $settings['enable_redirect_in_new_tab'] ) ? $settings['enable_redirect_in_new_tab'] : false;
 				}
 			}
@@ -1287,7 +1287,7 @@ class EVF_Form_Task {
 						<script type="text/javascript">
 							document.addEventListener('DOMContentLoaded', function() {
 								var a = document.createElement('a');
-								a.href = '<?php echo esc_url( $redirect_url ); ?>';
+								a.href = '<?php echo esc_url_raw( $redirect_url ); ?>';
 								a.target = '_blank';
 								a.rel = 'noopener noreferrer';
 								a.style.display = 'none';
@@ -1298,7 +1298,7 @@ class EVF_Form_Task {
 
 								// Fallback if blocked
 								setTimeout(function() {
-									window.location.href = '<?php echo esc_url( $redirect_url ); ?>';
+									window.location.href = '<?php echo esc_url_raw( $redirect_url ); ?>';
 								}, 100);
 							});
 						</script>
@@ -1307,7 +1307,7 @@ class EVF_Form_Task {
 					?>
 					<script type="text/javascript">
 					setTimeout(function() {
-						window.location.replace('<?php echo esc_url( $redirect_url ); ?>');
+						window.location.replace('<?php echo esc_url_raw( $redirect_url ); ?>');
 					}, 100);
 					</script>
 					<?php
@@ -1391,6 +1391,9 @@ class EVF_Form_Task {
 
 		$notifications = isset( $form_data['settings']['email'] ) ? $form_data['settings']['email'] : array();
 
+		// Connections whose attachments still need cleaning up once every notification is sent.
+		$cleanup_connections = array();
+
 		foreach ( $notifications as $connection_id => $notification ) :
 
 			// Don't proceed if email notification is not enabled.
@@ -1455,10 +1458,20 @@ class EVF_Form_Task {
 				$emails->send( trim( $address ), $email['subject'], $email['message'], '', $connection_id );
 			}
 
-			if ( isset( $attachment ) ) {
-				do_action( 'everest_forms_remove_attachments_after_send_email', $attachment, $fields, $form_data, 'entry-email', $connection_id, $entry_id );
-			}
+			$cleanup_connections[] = $connection_id;
 			endforeach;
+
+		/*
+		 * Clean up the attachment files only after every notification has been sent.
+		 * Cleaning up inside the loop deletes the uploaded files (when entry storage is
+		 * disabled) and the generated CSV while later notifications are still pending,
+		 * so those notifications go out without their attachments.
+		 */
+		if ( isset( $attachment ) ) {
+			foreach ( $cleanup_connections as $cleanup_connection_id ) {
+				do_action( 'everest_forms_remove_attachments_after_send_email', $attachment, $fields, $form_data, 'entry-email', $cleanup_connection_id, $entry_id );
+			}
+		}
 	}
 
 	/**
