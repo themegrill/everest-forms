@@ -52,7 +52,23 @@ const webpackConfig = {
 			},
 			{
 				test: /.scss$/,
-				use: ['style-loader', 'css-loader', 'sass-loader'],
+				use: [
+					'style-loader',
+					'css-loader',
+					{
+						loader: 'sass-loader',
+						options: {
+							// Dart Sass (since 1.71) prepends a BOM/@charset to its output
+							// whenever a stylesheet has non-ASCII characters (e.g. em dashes
+							// in comments). style-loader injects that output verbatim into a
+							// runtime <style> tag, and the leading BOM breaks the CSS parser's
+							// recognition of the very first rule. Disable it at the source.
+							sassOptions: {
+								charset: false,
+							},
+						},
+					},
+				],
 			},
 			{
 				test: /\.(png|svg|jpg|jpeg|gif|webp)$/i,
