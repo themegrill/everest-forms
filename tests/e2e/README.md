@@ -1,6 +1,6 @@
 # Everest Forms — E2E suite
 
-Playwright, Chromium only. Nineteen `@fresh` tests. Half cover the basics —
+Playwright, Chromium only. Twenty `@fresh` tests. Half cover the basics —
 activation, settings persistence, form creation — and half are regression
 guards for specific changes shipped between **3.4.8 and 3.6.0**, each traced to
 its changelog entry in the spec's `@source`. This is still a **starting** suite
@@ -10,6 +10,7 @@ its changelog entry in the spec's `@source`. This is still a **starting** suite
 
 | Release | Change | Spec |
 |---|---|---|
+| 3.6.1 | Query params in external redirect URLs were HTML-encoded | `submission/external-redirect-query-params` |
 | 3.6.0 | Revamped Style Customizer — panel structure | `style-customizer/style-customizer-v2` |
 | 3.6.0 | Revamped Style Customizer — a preset reaches the form | `style-customizer/color-preset-reaches-front-end` |
 | 3.5.3 | CAPTCHA language reset to English (UK) after saving | `settings/captcha-language-persists` |
@@ -82,6 +83,17 @@ Recorded because each cost a debugging cycle and the DOM gives no hint:
   the hook times out. Read the `href` and navigate to it instead — it carries
   the nonce anyway.
 - The **form builder guards navigation** with an unsaved-changes confirm.
+- **`networkidle` is not a save signal in the builder.** It is a long-lived page
+  that keeps chattering, so the wait resolves immediately and a following
+  navigation races the write — the field you just added is silently discarded.
+  Wait for the `admin-ajax.php` response whose body contains
+  `everest_forms_save_form` (see `saveForm()` usage).
+- **Smart tags are not processed in the confirmation success message.**
+  `everest_forms_process_smart_tags` is applied to redirect URLs and email
+  fields only (`class-evf-form-task.php:877` renders the message as-is), so a
+  `{field_id="..."}` there renders literally. This is by design, not a bug.
+- **The external-URL setting strips `{`, `"` and `}` on save**, so a smart tag
+  cannot be smuggled through a redirect query value either.
 - The plugin's **preview URL (`?form_id=<id>&evf_preview=true`) is admin-only**.
   An anonymous request gets the theme's page with no form in it, so any
   submission test that uses it is really testing an administrator submitting a
@@ -124,6 +136,14 @@ Honest gaps, roughly in priority order:
 5. **Field-level validation.** Required/email/phone/number/file rules are
    configured by the settings specs but never exercised against a submission.
 6. **Entries management** — export, delete, bulk actions, the single-entry view.
+7. **The 3.6.1 Country smart-tag fix.** Attempted and abandoned: the fix lives in
+   the array-shaped branch of `EVF_Smart_Tags::process()`, and neither reachable
+   free surface gets there — the success message never runs smart tags, and the
+   redirect URL field strips the tag's braces on save. It is very likely only
+   observable through an email notification, so it needs a mail catcher. A first
+   version of this spec passed identically with the fix present and reverted;
+   it was deleted rather than kept, because a guard that cannot fail is worse
+   than no guard.
 
 A green run means "the plugin activates, its admin screens render, settings
 save, a form can be created, and the specific things fixed between 3.4.8 and

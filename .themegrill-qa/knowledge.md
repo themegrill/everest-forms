@@ -158,8 +158,8 @@ particularly whether `submission` and `entries` are usefully separate.
 
 ## Test coverage as it stands
 
-A `@fresh` suite exists at `tests/e2e/` — 19 tests, all passing against
-`test-colormag.local` on 2026-09-07.
+A `@fresh` suite exists at `tests/e2e/` — 20 tests, all passing against
+`test-colormag.local` on 2026-09-07 (product version 3.6.1).
 
 Baseline (flows 8 partially, and the first half of 1):
 
@@ -182,6 +182,8 @@ each traced to its changelog entry:
 - System Info reports the addons list (3.5.3)
 - conditional logic appears as a Pro upsell in field settings (3.5.0)
 - the free Analytics page offers Export and Print (3.5.0)
+- an external redirect keeps every query parameter (3.6.1) — proved against the
+  reverted fix, where the second parameter is silently swallowed by a fragment
 
 Critical flow #1 is now covered end to end: a visitor submits a published form
 anonymously and the entry is verified on the Entries screen, values included.

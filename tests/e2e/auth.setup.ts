@@ -36,14 +36,65 @@ setup('authenticate', async ({ browser }) => {
     await page.locator('#user_login').fill(user);
     await page.locator('#user_pass').fill(password);
     await page.locator('#wp-submit').click();
+    await page.waitForLoadState('domcontentloaded');
+
+    // Diagnose before asserting.
+    //
+    // The bare `#wpadminbar` assertion this replaced could only ever say "the
+    // admin bar is not here", and then offered a guess — wrong credentials, or
+    // an unreachable site. On CI that guess is unactionable: the reader cannot
+    // tell a rejected password from a fatal in admin bootstrap, and the two
+    // have completely different fixes. Both are visible on the page we are
+    // already looking at, so read them.
+    //
+    // The distinction matters most on a disposable Playground site, where
+    // plugins load on wp-login.php but admin-only hooks do not: a fatal in
+    // admin init leaves the login page working perfectly and blanks
+    // /wp-admin/, which presents exactly like a bad password.
+    const landedOn = page.url();
+    const bodyText = await page.locator('body').innerText().catch(() => '');
+
+    const loginError = await page
+      .locator('#login_error')
+      .first()
+      .innerText()
+      .catch(() => '');
+    if (loginError.trim()) {
+      throw new Error(
+        `WordPress rejected the login for "${user}" at ${url}.\n` +
+          `It said: ${loginError.trim().replace(/\s+/g, ' ')}\n\n` +
+          'This is a credentials problem, not a connectivity one — the site served ' +
+          'wp-login.php and answered. Check TGQA_ADMIN_USER / TGQA_ADMIN_PASS for this ' +
+          'environment. On a Playground run these default to admin/password from the ' +
+          'blueprint; if that is what was sent, the blueprint and the runner disagree.',
+      );
+    }
+
+    const fatal = bodyText.match(
+      /(Fatal error|Parse error|Uncaught \w*(Error|Exception))[^\n]{0,300}/,
+    );
+    if (fatal) {
+      throw new Error(
+        `The login succeeded but wp-admin returned a PHP fatal at ${url}.\n` +
+          `${fatal[0]}\n\n` +
+          'The credentials are fine. Something in admin bootstrap is dying — note that ' +
+          'plugins load on wp-login.php but admin-only hooks do not, which is why the ' +
+          'login page rendered and this did not.',
+      );
+    }
 
     // The admin bar only renders once the login round-trip actually completed,
-    // so it distinguishes "logged in" from "wp-login.php re-rendered with an
-    // error", which a URL check alone does not.
+    // so it distinguishes "logged in" from "wp-login.php re-rendered", which a
+    // URL check alone does not.
     await expect(
       page.locator('#wpadminbar'),
-      `Logged in as "${user}" at ${url} but wp-admin never rendered. Wrong credentials, ` +
-        'or the site is not reachable from here.',
+      `Logged in as "${user}" at ${url} but wp-admin never rendered, with no login ` +
+        `error and no PHP fatal on the page.\n` +
+        `Landed on: ${landedOn}\n` +
+        `Page began: ${bodyText.trim().replace(/\s+/g, ' ').slice(0, 200) || '(empty body)'}\n\n` +
+        'An empty body here usually means a fatal that was logged rather than printed ' +
+        '(display_errors off). A redirect to somewhere unexpected means a plugin is ' +
+        'intercepting admin init.',
     ).toBeVisible({ timeout: 30_000 });
 
     fs.mkdirSync(path.dirname(STORAGE_STATE), { recursive: true });
