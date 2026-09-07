@@ -1,0 +1,42 @@
+name: Build Testable ZIP
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, ready_for_review]
+    branches: [develop]
+  workflow_dispatch:
+
+jobs:
+  zip:
+    uses: themegrill/.github/.github/workflows/pr-build-zip.yml@master
+    with:
+      node-version: '20.x'
+      php-version: '8.2'
+      package-manager: npm
+      # `npm run build` runs this repo's own bin/build-zip.sh, which is a
+      # fully self-contained release script: it does its own
+      # `npm install --legacy-peer-deps`, its own `composer install` (with a
+      # PHP-version fix pending in a separate PR to that script), its own JS
+      # build, and its own rsync+zip -- producing everest-forms.zip at the
+      # repo root already. This workflow's own install/composer steps would
+      # just be redundant, wasted work duplicating what the script already
+      # does, so they're skipped/no-op'd here rather than fighting it.
+      # Can't skip this like composer-install: `npm run build` is literally
+      # `cross-env ./bin/build-zip.sh`, and cross-env has to already be
+      # resolvable from node_modules/.bin before that command can even
+      # start -- build-zip.sh's own internal npm install happens too late
+      # to help with that (confirmed for real: skipping this outright hit
+      # "cross-env: not found"). --legacy-peer-deps for the same reason as
+      # documented on the build-zip.sh fix -- @ajna/pagination's peer
+      # dependency conflict blocks a plain `npm ci` here too.
+      install-command: npm ci --legacy-peer-deps
+      composer-install: false
+      build-command: npm run build
+      zip-glob: 'everest-forms.zip'
+      artifacts-bucket: themegrill-pr-artifacts
+      public-base-url: https://themegrill-pr-artifacts.s3.amazonaws.com
+      s3-region: us-east-1
+    secrets:
+      BOT_TOKEN: ${{ secrets.BOT_TOKEN }}
+      ARTIFACTS_KEY: ${{ secrets.ARTIFACTS_KEY }}
+      ARTIFACTS_SECRET: ${{ secrets.ARTIFACTS_SECRET }}

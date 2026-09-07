@@ -1,0 +1,527 @@
+{
+  "source": "https://docs.everestforms.net",
+  "mode": "rest",
+  "sections": [
+    {
+      "section": "tutorials",
+      "label": "How To?",
+      "parent": null,
+      "file": "docs/tutorials.md",
+      "articles": 37,
+      "failed": 0,
+      "thin": [
+        {
+          "url": "https://docs.everestforms.net/docs/payment-fields-3/",
+          "chars": 62
+        }
+      ],
+      "outcomes": 74,
+      "titles": [
+        "How to Integrate Shield silentCAPTCHA with Everest Forms?",
+        "How to Use Analytics in Everest Forms",
+        "Survey Report",
+        "How to Let Users Download Quiz Form After Submission using Everest Forms?",
+        "How do you resolve the issues with AJAX while saving/submitting the forms?",
+        "How to Become a Translator Contributor in WordPress and Translate Everest Forms Plugin?",
+        "How to Set Up Social Login for User Registration in Everest Forms?",
+        "How to submit entries via RestAPI? [Postman Example]",
+        "How to Share System Info for Faster Troubleshooting",
+        "How to set the option values for the select fields?",
+        "How to integrate Google Calendar on your forms?",
+        "How to integrate Akismet with Everest Forms?",
+        "How to enable and view logs in Everest Forms",
+        "How to auto-populate one form’s data to another?",
+        "How to integrate Cloudflare Turnstile with the Everest Forms?",
+        "How to give a review on the TrustPilot?",
+        "Payment fields Video Tutorials",
+        "How to submit a feature request?",
+        "How to configure Caching plugins?",
+        "How to track Everest Forms’ form submission using Google Analytics 4?",
+        "How to find the purchase details?",
+        "How to Filter and Export Form Entries?",
+        "How to give a review to the Everest Form plugin",
+        "How to integrate Everest Forms with the AMP?",
+        "Where do I add my custom CSS?",
+        "How to white list domains for email?",
+        "How to Create Temporary Login for WordPress Dashboard Without Password?",
+        "How to enable theme/plugin editor mode?",
+        "How to Integrate Hcaptcha in the Everest Forms?",
+        "How to Redirect Users Conditionally After Form Submission?",
+        "How to allow files with extensions that aren’t supported by the WordPress default, to be uploaded?",
+        "How to Send Email to Different Recipients Using Conditional Logic?",
+        "How to Add a Mailchimp Subscribe Checkbox?",
+        "How To Use Custom Input Mask",
+        "How to Use AND/OR Conditional Logic?",
+        "How to Implement Conditional Logic in Form Fields?",
+        "How to create GDPR compliant form?"
+      ]
+    },
+    {
+      "section": "form-fields",
+      "label": "Form Fields",
+      "parent": null,
+      "file": "docs/form-fields.md",
+      "articles": 18,
+      "failed": 0,
+      "thin": [],
+      "outcomes": 34,
+      "titles": [
+        "How to Edit Meta Key of the Form Fields in Everest Forms?",
+        "Field Visibility",
+        "How to protect uploaded files from direct access? [PRO]",
+        "How to use the Lookup field to create an advanced form? **Pro**",
+        "How to enable regex validation in the form fields?",
+        "How to set a unique ID for each form submission? [Pro]",
+        "How to add a custom validation message for the required field?",
+        "How to make the Privacy Policy field look most advanced? [Pro]",
+        "How to add a Range Slider to your form? [Pro]",
+        "How to configure the Address fields? [Pro]",
+        "Additional options for the Password fields. [Pro]",
+        "How to Configure the Phone Field with Extra Available Options? [Pro]",
+        "What additional settings do you get in the Image Upload Fields? [Pro]",
+        "How to set up the date/time field with advanced options?",
+        "How to avoid duplicate emails from submitting the forms?",
+        "How to add Bulk Choices for Dropdown, Multiple Choice & Checkboxes Fields?",
+        "How to limit characters/word count on a single-line text field?",
+        "How to add image options on the Multiple Choice field?"
+      ]
+    },
+    {
+      "section": "marketing",
+      "label": "Marketing",
+      "parent": null,
+      "file": "docs/marketing.md",
+      "articles": 17,
+      "failed": 0,
+      "thin": [],
+      "outcomes": 77,
+      "titles": [
+        "Moosend",
+        "Salesflare",
+        "GetGist",
+        "CleverReach",
+        "AWeber Integration",
+        "Airtable",
+        "MailPoet",
+        "iContact",
+        "GetResponse",
+        "Sendinblue/Brevo",
+        "Constant Contact",
+        "Drip",
+        "Campaign Monitor",
+        "MailerLite",
+        "Active Campaign",
+        "ConvertKit",
+        "MailChimp"
+      ]
+    },
+    {
+      "section": "advanced",
+      "label": "Advanced",
+      "parent": null,
+      "file": "docs/advanced.md",
+      "articles": 14,
+      "failed": 0,
+      "thin": [],
+      "outcomes": 105,
+      "titles": [
+        "QR Generator",
+        "Advanced Form Analytics",
+        "AI Contact Form",
+        "Cloud Storage",
+        "Coupons",
+        "SMS Notification",
+        "Calculations",
+        "Repeater Fields",
+        "Google Sheets",
+        "Post Submissions",
+        "User Registration",
+        "Zapier Integration Guide",
+        "Geolocation",
+        "PDF Form Submission"
+      ]
+    },
+    {
+      "section": "faq",
+      "label": "Frequently Asked Questions",
+      "parent": null,
+      "file": "docs/faq.md",
+      "articles": 13,
+      "failed": 0,
+      "thin": [],
+      "outcomes": 43,
+      "titles": [
+        "How to fix Unable to Process Your Form, Please Try Again Error?",
+        "How to Fix Update Failed: Download Failed (Unauthorized) Error?",
+        "How to install and activate premium features?",
+        "Getting Familiar with Everest Forms Fields",
+        "How to add the custom code snippet on your site?",
+        "How to Manage your Site License?",
+        "How to Upgrade your license plan?",
+        "How to Translate Everest Forms to Another Language?",
+        "Emails are not being delivered?",
+        "How to Show or Hide the Submit Button?",
+        "How to send a confirmation email to one who filled up the form",
+        "How to Integrate Google reCAPTCHA in WordPress?",
+        "How to Import/Export Forms?"
+      ]
+    },
+    {
+      "section": "everest-forms-pro",
+      "label": "Everest Forms Pro",
+      "parent": null,
+      "file": "docs/everest-forms-pro.md",
+      "articles": 10,
+      "failed": 0,
+      "thin": [],
+      "outcomes": 44,
+      "titles": [
+        "How to validate a field as a unique field?",
+        "How to add a tooltip on the form fields?",
+        "Webhooks",
+        "PopUp Forms",
+        "How to auto-populate form fields using query string?",
+        "How to integrate the Everest Forms related capabilities for users, using third party plugins?",
+        "How to Upload Files to Google Drive or Dropbox?",
+        "Entries Dashboard Analytics",
+        "Conditional Logic",
+        "Additional Premium Fields"
+      ]
+    },
+    {
+      "section": "new-payment-gateways",
+      "label": "New Payment Gateways",
+      "parent": null,
+      "file": "docs/new-payment-gateways.md",
+      "articles": 7,
+      "failed": 0,
+      "thin": [],
+      "outcomes": 64,
+      "titles": [
+        "Mollie",
+        "How to Use the Payment Gateway Field",
+        "RazorPay",
+        "Authorize.Net",
+        "Square",
+        "PayPal Standard",
+        "Stripe"
+      ]
+    },
+    {
+      "section": "form-customization-and-user-experience",
+      "label": "Form Customization and User Experience",
+      "parent": null,
+      "file": "docs/form-customization-and-user-experience.md",
+      "articles": 6,
+      "failed": 0,
+      "thin": [],
+      "outcomes": 46,
+      "titles": [
+        "Frontend Listing",
+        "Landing Page",
+        "Conversational Forms",
+        "Save and Continue",
+        "Survey, Polls, and Quiz",
+        "Multi-Part Form"
+      ]
+    },
+    {
+      "section": "getting-started-with-form",
+      "label": "Getting Started with Form",
+      "parent": null,
+      "file": "docs/getting-started-with-form.md",
+      "articles": 6,
+      "failed": 0,
+      "thin": [],
+      "outcomes": 22,
+      "titles": [
+        "How to Create a Form with AI?",
+        "Keyboard Shortcut in Form Builder",
+        "Guide to Form Entries",
+        "How to Disable a Form?",
+        "How to Display the Forms you have Created?",
+        "How to Create a Form with Everest Forms?"
+      ]
+    },
+    {
+      "section": "crms",
+      "label": "CRMs",
+      "parent": null,
+      "file": "docs/crms.md",
+      "articles": 6,
+      "failed": 0,
+      "thin": [],
+      "outcomes": 41,
+      "titles": [
+        "amoCRM",
+        "OnePage CRM",
+        "Salesforce",
+        "Zoho CRM",
+        "HubSpot",
+        "Pipedrive"
+      ]
+    },
+    {
+      "section": "individual-form-settings",
+      "label": "Individual Form Settings",
+      "parent": null,
+      "file": "docs/individual-form-settings.md",
+      "articles": 6,
+      "failed": 0,
+      "thin": [],
+      "outcomes": 21,
+      "titles": [
+        "Enable Custom CSS and JS",
+        "Form Confirmations",
+        "Anti-Spam and Security",
+        "How to Use Smart Tags in Everest Forms?",
+        "Email Settings",
+        "General Settings"
+      ]
+    },
+    {
+      "section": "payment-gateways",
+      "label": "Payment Gateways ( Old )",
+      "parent": null,
+      "file": "docs/payment-gateways.md",
+      "articles": 6,
+      "failed": 0,
+      "thin": [],
+      "outcomes": 35,
+      "titles": [
+        "Square",
+        "Mollie",
+        "Authorize.Net",
+        "RazorPay",
+        "Stripe",
+        "PayPal Standard"
+      ]
+    },
+    {
+      "section": "integrations",
+      "label": "Integrations",
+      "parent": null,
+      "file": "docs/integrations.md",
+      "articles": 5,
+      "failed": 0,
+      "thin": [],
+      "outcomes": 21,
+      "titles": [
+        "CleanTalk",
+        "Slack Integration",
+        "Telegram Integration",
+        "WooCommerce",
+        "Trello"
+      ]
+    },
+    {
+      "section": "troubleshooting",
+      "label": "Troubleshooting",
+      "parent": null,
+      "file": "docs/troubleshooting.md",
+      "articles": 5,
+      "failed": 0,
+      "thin": [],
+      "outcomes": 12,
+      "titles": [
+        "How to Solve WordPress Contact Form not Sending Email?",
+        "Have trouble with integrating File Upload in Elementor PopUp?",
+        "How to check your site’s PHP and WordPress versions?",
+        "How to update a plugin manually?",
+        "How To Check Theme Plugin Conflict?"
+      ]
+    },
+    {
+      "section": "page-builder-compatibility",
+      "label": "Page Builder Compatibility",
+      "parent": null,
+      "file": "docs/page-builder-compatibility.md",
+      "articles": 5,
+      "failed": 0,
+      "thin": [],
+      "outcomes": 7,
+      "titles": [
+        "How to use WP Bakery Page Builder with the Everest Forms?",
+        "How to use Oxygen Builder with the Everest Forms?",
+        "How to use Divi Builder with Everest Forms?",
+        "How to use Bricks Builder theme with Everest Forms?",
+        "How to use Beaver Builder with Everest Forms?"
+      ]
+    },
+    {
+      "section": "account-management",
+      "label": "Account Management",
+      "parent": null,
+      "file": "docs/account-management.md",
+      "articles": 5,
+      "failed": 0,
+      "thin": [],
+      "outcomes": 16,
+      "titles": [
+        "How to Deactivate License?",
+        "How to renew a subscription manually?",
+        "How to Generate Invoice of your Purchase?",
+        "How to cancel my subscription?",
+        "How to update billing details for WPEverest Purchase"
+      ]
+    },
+    {
+      "section": "developers-doc",
+      "label": "Developer's Doc",
+      "parent": null,
+      "file": "docs/developers-doc.md",
+      "articles": 4,
+      "failed": 0,
+      "thin": [
+        {
+          "url": "https://docs.everestforms.net/docs/developer-resources/",
+          "chars": 26
+        }
+      ],
+      "outcomes": 7,
+      "titles": [
+        "Everest Forms WP Abilities API Integration",
+        "Everest Forms Zapier API",
+        "Developer Resources",
+        "Custom Code Snippets"
+      ]
+    },
+    {
+      "section": "global-settings",
+      "label": "Global Settings",
+      "parent": null,
+      "file": "docs/global-settings.md",
+      "articles": 4,
+      "failed": 0,
+      "thin": [],
+      "outcomes": 19,
+      "titles": [
+        "Advanced",
+        "Security",
+        "General",
+        "Email"
+      ]
+    },
+    {
+      "section": "anti-spam-and-security",
+      "label": "Anti-Spam and Security",
+      "parent": null,
+      "file": "docs/anti-spam-and-security.md",
+      "articles": 3,
+      "failed": 0,
+      "thin": [],
+      "outcomes": 16,
+      "titles": [
+        "How to Stop Spam on WordPress Contact Form?",
+        "Form Restriction",
+        "Captcha"
+      ]
+    },
+    {
+      "section": "tools",
+      "label": "Tools",
+      "parent": null,
+      "file": "docs/tools.md",
+      "articles": 3,
+      "failed": 0,
+      "thin": [
+        {
+          "url": "https://docs.everestforms.net/docs/payment-log/",
+          "chars": 102
+        }
+      ],
+      "outcomes": 2,
+      "titles": [
+        "API Log",
+        "Payment Log",
+        "Form Migrator"
+      ]
+    },
+    {
+      "section": "getting-started",
+      "label": "Getting Started with Plugin",
+      "parent": null,
+      "file": "docs/getting-started.md",
+      "articles": 3,
+      "failed": 0,
+      "thin": [
+        {
+          "url": "https://docs.everestforms.net/docs/getting-started/",
+          "chars": 145
+        }
+      ],
+      "outcomes": 3,
+      "titles": [
+        "Getting Started Video Tutorials",
+        "Configuration Requirements for Everest Forms",
+        "How to install Everest Forms Free plugin?"
+      ]
+    },
+    {
+      "section": "design",
+      "label": "Design",
+      "parent": null,
+      "file": "docs/design.md",
+      "articles": 2,
+      "failed": 0,
+      "thin": [],
+      "outcomes": 9,
+      "titles": [
+        "Style Customizer",
+        "Email Templates"
+      ]
+    },
+    {
+      "section": "uncategorised",
+      "label": "uncategorised",
+      "parent": null,
+      "file": "docs/uncategorised.md",
+      "articles": 1,
+      "failed": 0,
+      "thin": [],
+      "outcomes": 3,
+      "titles": [
+        "How to Set Up Entry Reports & Email Summaries in Everest Forms"
+      ]
+    },
+    {
+      "section": "translation",
+      "label": "Translation",
+      "parent": null,
+      "file": "docs/translation.md",
+      "articles": 1,
+      "failed": 0,
+      "thin": [],
+      "outcomes": 1,
+      "titles": [
+        "How to Translate Everest Forms into Multiple Languages?"
+      ]
+    }
+  ],
+  "suggested_areas": [
+    "tutorials",
+    "form-fields",
+    "marketing",
+    "advanced",
+    "faq",
+    "everest-forms-pro",
+    "new-payment-gateways",
+    "form-customization-and-user-experience",
+    "getting-started-with-form",
+    "crms",
+    "individual-form-settings",
+    "payment-gateways",
+    "integrations",
+    "troubleshooting",
+    "page-builder-compatibility",
+    "account-management",
+    "developers-doc",
+    "global-settings",
+    "anti-spam-and-security",
+    "tools",
+    "getting-started",
+    "design",
+    "uncategorised",
+    "translation"
+  ]
+}

@@ -31,10 +31,16 @@ jobs:
           git config --global user.email "$MY_EMAIL"
           git config --global user.name "$MY_USERNAME"
 
-      - name: Use Node.js 12.x
+      # Node 20, not 12: @playwright/test (a devDependency since the E2E suite
+      # landed) declares `engines.node >= 20`, and package.json now declares the
+      # same minimum. npm 6 only WARNs on an engine mismatch rather than failing,
+      # so Node 12 installed fine — but it left CI running a Node the project no
+      # longer claims to support. 20.x is what .github/workflows/pr-build-zip.yml
+      # already uses.
+      - name: Use Node.js 20.x
         uses: actions/setup-node@v2
         with:
-          node-version: 12.x
+          node-version: 20.x
 
       - name: Setup PHP v7.4
         uses: shivammathur/setup-php@v2
