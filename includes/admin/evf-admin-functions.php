@@ -557,12 +557,29 @@ function everest_forms_panel_field($option, $panel, $field, $form_data, $label, 
 			$output .= '</div>';
 			break;
 		case 'image':
-			if ('' !== $value) {
-				$headers      = get_headers($value, 1);
-				$content_type = is_array($headers['Content-Type']) ? implode(' ', $headers['Content-Type']) : $headers['Content-Type'];
+			if ( '' !== $value ) {
+				$upload_dir = wp_upload_dir();
+				$local_path = str_replace( $upload_dir['baseurl'], $upload_dir['basedir'], $value );
 
-				if (strpos($content_type, 'image/') === false) {
-					$value = '';
+				if ( file_exists( $local_path ) ) {
+					$file_type = wp_check_filetype( $local_path );
+
+					if ( 0 !== strpos( (string) $file_type['type'], 'image/' ) ) {
+						$value = '';
+					}
+				} else {
+					$response = wp_remote_head( $value );
+
+					// Only a 2xx response is evidence about the resource; a blocked, timed out or
+					// intercepted request must not wipe an already saved image.
+					if ( ! is_wp_error( $response ) && 200 === wp_remote_retrieve_response_code( $response ) ) {
+						$content_type = wp_remote_retrieve_header( $response, 'content-type' );
+						$content_type = is_array( $content_type ) ? implode( ' ', $content_type ) : (string) $content_type;
+
+						if ( '' !== $content_type && false === strpos( $content_type, 'image/' ) ) {
+							$value = '';
+						}
+					}
 				}
 			}
 

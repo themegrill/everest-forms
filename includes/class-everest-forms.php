@@ -23,7 +23,7 @@ final class EverestForms {
 	 *
 	 * @var string
 	 */
-	public $version = '3.6.0';
+	public $version = '3.6.1';
 
 	/**
 	 * The single instance of the class.
@@ -187,6 +187,7 @@ final class EverestForms {
 		add_action( 'switch_blog', array( $this, 'wpdb_table_fix' ), 0 );
 		add_filter( 'everest_forms_entry_bulk_actions', array( $this, 'everest_forms_entry_bulk_actions' ) );
 		add_action( 'init', array( $this, 'evf_register_inactive_post_status' ) );
+		add_action( 'init', array( $this, 'maybe_load_integrations_for_oauth' ), 5 );
 	}
 
 	/**
@@ -433,7 +434,34 @@ final class EverestForms {
 		do_action( 'everest_forms_init' );
 	}
 
+	/**
+	 * Load integrations early when the request is an OAuth callback.
+	 *
+	 * Integrations are otherwise lazily loaded on `current_screen`, and only on
+	 * Everest Forms admin screens. Providers register their callback handlers in
+	 * their constructors on hooks that fire before that (`template_redirect` for
+	 * Google Drive/Sheets/Calendar, `admin_init` for OneDrive), so without this
+	 * the access code returned by the provider is never picked up.
+	 *
+	 * @since 3.5.4
+	 */
+	public function maybe_load_integrations_for_oauth() {
+		if ( $this->integrations ) {
+			return;
+		}
 
+		// phpcs:disable WordPress.Security.NonceVerification.Recommended
+		// Google redirects back to home_url() with ?code=...&scope=..., OneDrive to admin_url( '?evf_onedrive_auth=1' ).
+		$is_google_callback   = ! empty( $_GET['code'] ) && ! empty( $_GET['scope'] );
+		$is_onedrive_callback = isset( $_GET['evf_onedrive_auth'] );
+		// phpcs:enable WordPress.Security.NonceVerification.Recommended
+
+		if ( ! $is_google_callback && ! $is_onedrive_callback ) {
+			return;
+		}
+
+		$this->integrations = new EVF_Integrations();
+	}
 
 	/**
 	 * Setup objects.

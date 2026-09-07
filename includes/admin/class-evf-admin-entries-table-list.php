@@ -180,17 +180,6 @@ class EVF_Admin_Entries_Table_List extends EVF_Base_List_Table {
 				}
 			}
 		} elseif ( ! empty( $entry_columns ) ) {
-			$key = array_search( 'sn', $entry_columns, true );
-			if ( false !== $key ) {
-				unset( $entry_columns[ $key ] );
-				$entry_columns = array_merge( array( 'sn' ), $entry_columns );
-			}
-
-			$key = array_search( 'id', $entry_columns, true );
-			if ( false !== $key ) {
-				unset( $entry_columns[ $key ] );
-				$entry_columns = array_merge( array( 'id' ), $entry_columns );
-			}
 			foreach ( $entry_columns as $id ) {
 				// Check to make sure the field as not been removed.
 				$status = defined( 'EFP_VERSION' ) ? true : false;

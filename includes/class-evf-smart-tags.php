@@ -337,6 +337,8 @@ class EVF_Smart_Tags {
 						}
 					} elseif ( isset( $value['number_of_rating'], $value['value'] ) ) {
 						$value = (string) $value['value'] . '/' . (string) $value['number_of_rating'];
+					} elseif ( isset( $value['type'], $value['country_code'] ) && 'country' === $value['type'] ) {
+						$value = $value['country_code'];
 					} else {
 						$value = $value[0];
 					}

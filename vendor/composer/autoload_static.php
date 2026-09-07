@@ -11,40 +11,40 @@ class ComposerStaticInit9a2cf263d30e5ab5059048903ceb21ec
     );
 
     public static $prefixLengthsPsr4 = array (
-        'S' => 
+        'S' =>
         array (
             'ScssPhp\\ScssPhp\\' => 16,
         ),
-        'E' => 
+        'E' =>
         array (
             'EverestForms\\Traits\\' => 20,
             'EverestForms\\Helpers\\' => 21,
             'EverestForms\\Addons\\' => 20,
         ),
-        'C' => 
+        'C' =>
         array (
             'Composer\\Installers\\' => 20,
         ),
     );
 
     public static $prefixDirsPsr4 = array (
-        'ScssPhp\\ScssPhp\\' => 
+        'ScssPhp\\ScssPhp\\' =>
         array (
             0 => __DIR__ . '/..' . '/scssphp/scssphp/src',
         ),
-        'EverestForms\\Traits\\' => 
+        'EverestForms\\Traits\\' =>
         array (
             0 => __DIR__ . '/../..' . '/traits',
         ),
-        'EverestForms\\Helpers\\' => 
+        'EverestForms\\Helpers\\' =>
         array (
             0 => __DIR__ . '/../..' . '/includes/Helpers',
         ),
-        'EverestForms\\Addons\\' => 
+        'EverestForms\\Addons\\' =>
         array (
             0 => __DIR__ . '/../..' . '/addons',
         ),
-        'Composer\\Installers\\' => 
+        'Composer\\Installers\\' =>
         array (
             0 => __DIR__ . '/..' . '/composer/installers/src/Composer/Installers',
         ),

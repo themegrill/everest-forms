@@ -52,7 +52,18 @@ const webpackConfig = {
 			},
 			{
 				test: /.scss$/,
-				use: ['style-loader', 'css-loader', 'sass-loader'],
+				use: [
+					'style-loader',
+					'css-loader',
+					{
+						loader: 'sass-loader',
+						options: {
+							sassOptions: {
+								charset: false,
+							},
+						},
+					},
+				],
 			},
 			{
 				test: /\.(png|svg|jpg|jpeg|gif|webp)$/i,
