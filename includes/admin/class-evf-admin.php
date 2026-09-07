@@ -72,7 +72,7 @@ class EVF_Admin {
 
 			if ( 'evf-addons-refresh' === $action ) {
 				if ( empty( $_GET['evf-addons-nonce'] ) || ! wp_verify_nonce( sanitize_key( wp_unslash( $_GET['evf-addons-nonce'] ) ), 'refresh' ) ) {
-					wp_die( esc_html_e( 'Could not verify nonce', 'everest-forms' ) );
+					wp_die( esc_html__( 'Could not verify nonce', 'everest-forms' ) );
 				}
 				foreach ( array( 'evf_pro_license_plan', 'evf_addons_sections_list', 'evf_extensions_section_list' ) as $transient ) {
 					delete_transient( $transient );
@@ -119,7 +119,7 @@ class EVF_Admin {
 			$templates = is_array( $templates ) ? $templates : array();
 			if ( 'evf-template-refresh' === $action ) {
 				if ( empty( $_GET['evf-template-nonce'] ) || ! wp_verify_nonce( sanitize_key( wp_unslash( $_GET['evf-template-nonce'] ) ), 'refresh' ) ) {
-					wp_die( esc_html_e( 'Could not verify nonce', 'everest-forms' ) );
+					wp_die( esc_html__( 'Could not verify nonce', 'everest-forms' ) );
 				}
 
 				foreach ( array( 'evf_pro_license_plan', 'evf_template_sections', 'evf_template_section', 'evf_template_section_list' ) as $transient ) {
