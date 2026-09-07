@@ -345,13 +345,17 @@ You can report security bugs through the Patchstack Vulnerability Disclosure Pro
 
 == Changelog ==
 
-= 3.6.1       - 02-09-2026
+= 3.6.1       - 07-09-2026
 * Fix 		  - Date/Time dropdown fields showed today's date instead of the saved value, and Smart Phone fields lost their country code, when editing an existing entry.
 * Fix 		  - Query parameters in external redirect URLs were HTML-encoded, causing incorrect values.
 * Fix 		  - Improved security of file upload field data handling.
 * Fix 		  - Cloud storage integrations (Google Drive, Google Sheets, Google Calendar, OneDrive) did not return the OAuth access code after connecting.
 * Fix 		  - File attachment missing from later email notifications when multiple notifications are enabled on a form.
 * Fix 		  - Manage Columns reorder of S.N. and Entry ID not respected in the Entries table.
+* Fix 		  - Country field smart tag rendered blank instead of the selected country.
+* Fix 		  - Saved image field values (e.g. PDF header/footer logo) could be cleared right after saving if the site's own self-request to verify the image failed.
+* Fix 		  - Style Customizer borders, colors and corner rounding not rendering in the builder's Style panel.
+* Fix 		  - Stray "96" appearing in notification emails sent without a chosen Email Template.
 
 = 3.6.0       - 13-08-2026
 * Enhance 	  - Revamped Style Customizer.
