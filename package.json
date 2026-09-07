@@ -81,8 +81,8 @@
     "webpackbar": "^5.0.2"
   },
   "engines": {
-    "node": ">=8.9.3",
-    "npm": ">=5.5.1"
+    "node": ">=20",
+    "npm": ">=8"
   },
   "lint-staged": {
     "*.php": [

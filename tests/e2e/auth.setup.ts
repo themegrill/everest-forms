@@ -133,7 +133,7 @@ async function storedStateStillWorks(
 ): Promise<boolean> {
   if (!fs.existsSync(STORAGE_STATE)) return false;
 
-  let context;
+  let context: import('@playwright/test').BrowserContext | undefined;
   try {
     context = await browser.newContext({ storageState: STORAGE_STATE, baseURL: url });
     const page = await context.newPage();

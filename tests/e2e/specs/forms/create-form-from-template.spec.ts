@@ -153,10 +153,14 @@ test('picking a template creates a form and opens the builder @fresh @forms', as
   await expect(
     page,
     `Picking "${templateName}" did not produce a saved form. The builder URL never ` +
-      'gained a form_id, so nothing was written to the everest_form post type.',
+      'gained a form_id (or id), so nothing was written to the everest_form post type.',
   ).toHaveURL(/[?&](form_id|id)=\d+/, { timeout: 45_000 });
 
-  createdFormId = new URL(page.url()).searchParams.get('form_id');
+  // The assertion above accepts either param, so read both — reading only
+  // form_id would skip cleanup on an `id=` redirect and leak the form.
+  const builderUrl = new URL(page.url());
+  createdFormId =
+    builderUrl.searchParams.get('form_id') ?? builderUrl.searchParams.get('id');
 
   await expect(
     page.locator('#everest-forms-builder, .everest-forms-admin-page, #evf-builder'),
