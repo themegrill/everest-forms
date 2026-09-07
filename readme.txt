@@ -345,7 +345,7 @@ You can report security bugs through the Patchstack Vulnerability Disclosure Pro
 
 == Changelog ==
 
-= 3.6.1       - 04-09-2026
+= 3.6.1       - 07-09-2026
 * Fix 		  - Date/Time dropdown fields showed today's date instead of the saved value, and Smart Phone fields lost their country code, when editing an existing entry.
 * Fix 		  - Query parameters in external redirect URLs were HTML-encoded, causing incorrect values.
 * Fix 		  - Improved security of file upload field data handling.
