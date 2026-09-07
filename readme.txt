@@ -355,6 +355,7 @@ You can report security bugs through the Patchstack Vulnerability Disclosure Pro
 * Fix 		  - Country field smart tag rendered blank instead of the selected country.
 * Fix 		  - Saved image field values (e.g. PDF header/footer logo) could be cleared right after saving if the site's own self-request to verify the image failed.
 * Fix 		  - Style Customizer borders, colors and corner rounding not rendering in the builder's Style panel.
+* Fix 		  - Stray "96" appearing in notification emails sent without a chosen Email Template.
 
 = 3.6.0       - 13-08-2026
 * Enhance 	  - Revamped Style Customizer.

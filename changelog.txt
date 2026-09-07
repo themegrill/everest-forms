@@ -10,6 +10,7 @@
 * Fix 		  - Manage Columns reorder of S.N. and Entry ID not respected in the Entries table.
 * Fix 		  - Saved image field values (e.g. PDF header/footer logo) could be cleared right after saving if the site's own self-request to verify the image failed.
 * Fix 		  - Style Customizer borders, colors and corner rounding not rendering in the builder's Style panel.
+* Fix 		  - Stray "96" appearing in notification emails sent without a chosen Email Template.
 
 = 3.6.0       - 13-08-2026
 * Enhance 	  - Revamped Style Customizer.
