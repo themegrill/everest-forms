@@ -25,12 +25,14 @@
     "test-php": "npm run lint-php && npm run test-unit-php",
     "test-php:watch": "wp-env run composer run-script test:watch",
     "pretest-unit-php": "wp-env start",
-    "test-unit-php": "wp-env run phpunit 'phpunit --configuration=/var/www/html/wp-content/plugins/everest-forms/phpunit.xml.dist --verbose'"
+    "test-unit-php": "wp-env run phpunit 'phpunit --configuration=/var/www/html/wp-content/plugins/everest-forms/phpunit.xml.dist --verbose'",
+    "test:e2e": "playwright test --config=tests/e2e/playwright.config.ts"
   },
   "devDependencies": {
     "@babel/core": "7.25.2",
     "@babel/eslint-parser": "7.25.1",
     "@babel/preset-typescript": "7.23.3",
+    "@playwright/test": "1.63.0",
     "@types/wordpress__block-editor": "^11.5.11",
     "@wordpress/babel-preset-default": "6.5.1",
     "@wordpress/block-editor": "^12.12.0",
@@ -47,6 +49,7 @@
     "copy-webpack-plugin": "^11.0.0",
     "cross-env": "7.0.3",
     "css-loader": "7.1.2",
+    "dotenv": "17.4.2",
     "eslint": "8.44.0",
     "grunt": "1.5.3",
     "grunt-contrib-compress": "2.0.0",

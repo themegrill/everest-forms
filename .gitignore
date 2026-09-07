@@ -54,3 +54,10 @@ phpunit-watcher.yml
 /release/
 
 /.idea/
+
+# claudegrill local credentials
+.themegrill-qa/.env.local
+
+# playwright run artefacts
+playwright-report/
+test-results/
