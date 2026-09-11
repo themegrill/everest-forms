@@ -58,6 +58,7 @@ $breakpoint-mobile: 782px;
 	flex-direction: column;
 	gap: 24px;
 	padding: 0;
+	margin-bottom: 32px;
 
 	&:last-child {
 		margin-bottom: 0;
@@ -186,6 +187,26 @@ $breakpoint-mobile: 782px;
 	display: flex;
 	align-items: center;
 	gap: 10px;
+}
+
+.everest-forms-accordion-badge {
+	display: inline-flex;
+	align-items: center;
+	font-size: 11px;
+	font-weight: 600;
+	line-height: 1;
+	text-transform: uppercase;
+	letter-spacing: 0.03em;
+	padding: 4px 8px;
+	border-radius: 3px;
+	border: 1px solid $accordion-border-color;
+	color: $accordion-text-secondary;
+	background: transparent;
+
+	&.everest-forms-accordion-badge--accent {
+		border-color: rgba($accordion-primary-color, 0.3);
+		color: $accordion-primary-color;
+	}
 }
 
 .everest-forms-accordion-toggle {
@@ -374,6 +395,10 @@ $breakpoint-mobile: 782px;
 		margin-bottom: 24px !important;
 		gap: 20px;
 
+		&:has(.forminp-tinymce) {
+			align-items: flex-start !important;
+		}
+
 		&:last-child {
 			margin-bottom: 0 !important;
 		}
@@ -426,6 +451,20 @@ $breakpoint-mobile: 782px;
 			display: flex;
 			align-items: center;
 			gap: 8px;
+
+			&.forminp-tinymce {
+				display: block;
+
+				.wp-editor-wrap {
+					width: 100%;
+				}
+
+				em,
+				.description {
+					display: block;
+					margin-top: 8px;
+				}
+			}
 
 			&.has-action,
 			.input-with-action {
