@@ -399,16 +399,78 @@ class EVF_Admin_Entries {
 	}
 
 	/**
+	 * Get the default subject for an entry status email.
+	 *
+	 * @param string $type 'approval' or 'denial'.
+	 * @return string
+	 */
+	private static function get_entry_status_email_default_subject( $type ) {
+		return 'denial' === $type
+			? esc_html__( 'Entry Submission Denied', 'everest-forms' )
+			: esc_html__( 'Form Entry Approved', 'everest-forms' );
+	}
+
+	/**
+	 * Get the default message for an entry status email.
+	 *
+	 * @param string $type 'approval' or 'denial'.
+	 * @return string
+	 */
+	private static function get_entry_status_email_default_message( $type ) {
+		return 'denial' === $type
+			? __( 'Hey, {name}<br/><br/>We regret to inform you that your form entry submitted on {entry_date} has been denied.<br/><br/>Thank you for giving us your precious time.<br/><br/>From {site_name}', 'everest-forms' )
+			: __( 'Hey, {name}<br/><br/>We\'re pleased to inform you that your form entry submitted on {entry_date} has been successfully approved.<br/><br/>Thank you for giving us your precious time.<br/><br/>From {site_name}', 'everest-forms' );
+	}
+
+	/**
+	 * Get the (possibly customized) subject for an entry status email.
+	 *
+	 * @param string $type 'approval' or 'denial'.
+	 * @return string
+	 */
+	public static function get_entry_status_email_subject( $type ) {
+		return get_option( "everest_forms_entry_{$type}_email_subject", self::get_entry_status_email_default_subject( $type ) );
+	}
+
+	/**
+	 * Get the (possibly customized) message for an entry status email, with {tag} placeholders replaced.
+	 *
+	 * @param string $type       'approval' or 'denial'.
+	 * @param string $name       Entry submitter's name.
+	 * @param string $entry_date Entry submission date.
+	 * @param string $site_name  Site name.
+	 * @return string
+	 */
+	public static function get_entry_status_email_message( $type, $name, $entry_date, $site_name ) {
+		$message = get_option( "everest_forms_entry_{$type}_email_body", self::get_entry_status_email_default_message( $type ) );
+
+		return str_replace( array( '{name}', '{entry_date}', '{site_name}' ), array( $name, $entry_date, $site_name ), $message );
+	}
+
+	/**
+	 * Whether an entry status email type is enabled.
+	 *
+	 * @param string $type 'approval' or 'denial'.
+	 * @return bool
+	 */
+	public static function is_entry_status_email_enabled( $type ) {
+		return 'no' !== get_option( "everest_forms_entry_{$type}_email_enable", 'yes' );
+	}
+
+	/**
 	 * Set entry status.
 	 *
-	 * @param int    $entry_id Entry ID.
-	 * @param string $status   Entry status.
+	 * @param int    $entry_id       Entry ID.
+	 * @param string $status         Entry status.
+	 * @param bool   $is_bulk_action Whether this status change came from a bulk action. Determined by the
+	 *                               caller (which knows its own context) rather than sniffed from request
+	 *                               data, since an unauthenticated/un-nonce-verified query var is not a
+	 *                               reliable signal.
 	 */
-	public static function update_status( $entry_id, $status = 'publish' ) {
+	public static function update_status( $entry_id, $status = 'publish', $is_bulk_action = false ) {
 		global $wpdb;
 
-		$update         = false;
-		$is_bulk_action = isset( $_GET['bulk_action'] ) && 'Apply' == $_GET['bulk_action'] ? true : false; // phpcs:ignore WordPress.Security.NonceVerification
+		$update = false;
 		if ( in_array( $status, array( 'star', 'unstar' ), true ) ) {
 			$update = $wpdb->update(
 				$wpdb->prefix . 'evf_entries',
@@ -452,6 +514,10 @@ class EVF_Admin_Entries {
 			$name       = '';
 
 			foreach ( $entry_meta as $key => $value ) {
+				if ( preg_match( '/^name_/', $key ) ) {
+					$name = $value;
+				}
+
 				if ( preg_match( '/^first_name_/', $key ) ) {
 					$first_name = $value;
 				}
@@ -463,29 +529,22 @@ class EVF_Admin_Entries {
 				if ( preg_match( '/^email/', $key ) ) {
 					$email = $value;
 				}
-
-				if ( '' === $name ) {
-					if ( ! empty( $first_name ) && ! empty( $last_name ) ) {
-						$name = $first_name . ' ' . $last_name;
-					} elseif ( ! empty( $first_name ) ) {
-						$name = $first_name;
-					} else {
-						$name = $last_name;
-					}
-				}
-
-				$subject = apply_filters( 'everest_forms_entry_submission_approval_subject', esc_html__( 'Form Entry Approved', 'everest-forms' ) );
-				/* translators:%s: User name of form entry */
-				$message = sprintf( __( 'Hey, %s', 'everest-forms' ), $name ) . '<br/>';
-				/* translators:%s: Form Entry Date */
-				$message .= '<br/>' . sprintf( __( 'We\'re pleased to inform you that your form entry submitted on %s has been successfully approved.', 'everest-forms' ), $entry_date ) . '<br/>';
-				$message .= '<br/>' . __( 'Thank you for giving us your precious time.', 'everest-forms' ) . '<br/>';
-				/* translators:%s: Site Name*/
-				$message .= '<br/>' . sprintf( __( 'From %s', 'everest-forms' ), $site_name );
-				$message  = apply_filters( 'everest_forms_entry_approval_message', $message, $name, $entry_date, $site_name );
 			}
 
-			if ( ! $is_bulk_action ) {
+			if ( '' === $name ) {
+				if ( ! empty( $first_name ) && ! empty( $last_name ) ) {
+					$name = $first_name . ' ' . $last_name;
+				} elseif ( ! empty( $first_name ) ) {
+					$name = $first_name;
+				} else {
+					$name = $last_name;
+				}
+			}
+
+			$subject = apply_filters( 'everest_forms_entry_submission_approval_subject', self::get_entry_status_email_subject( 'approval' ) );
+			$message = apply_filters( 'everest_forms_entry_approval_message', self::get_entry_status_email_message( 'approval', $name, $entry_date, $site_name ), $name, $entry_date, $site_name );
+
+			if ( ! $is_bulk_action && self::is_entry_status_email_enabled( 'approval' ) ) {
 				$email_obj = new EVF_Emails();
 				$email_obj->send( $email, $subject, $message );
 			}
@@ -507,43 +566,42 @@ class EVF_Admin_Entries {
 			$last_name  = '';
 			$email      = '';
 			$site_name  = get_option( 'blogname', '' );
+			$subject    = '';
+			$message    = '';
 			$name       = '';
 
 			foreach ( $entry_meta as $key => $value ) {
-				if ( preg_match( '/^first_name/', $key ) ) {
+				if ( preg_match( '/^name_/', $key ) ) {
+					$name = $value;
+				}
+
+				if ( preg_match( '/^first_name_/', $key ) ) {
 					$first_name = $value;
 				}
 
-				if ( preg_match( '/^last_name/', $key ) ) {
+				if ( preg_match( '/^last_name_/', $key ) ) {
 					$last_name = $value;
 				}
 
 				if ( preg_match( '/^email/', $key ) ) {
 					$email = $value;
 				}
-
-				if ( '' === $name ) {
-					if ( ! empty( $first_name ) && ! empty( $last_name ) ) {
-						$name = $first_name . ' ' . $last_name;
-					} elseif ( ! empty( $first_name ) ) {
-						$name = $first_name;
-					} else {
-						$name = $last_name;
-					}
-				}
-
-				$subject = apply_filters( 'everest_forms_entry_submission_denial_subject', esc_html__( 'Entry Submission Denied', 'everest-forms' ) );
-				/* translators:%s: User name of form entry */
-				$message = sprintf( __( 'Hey, %s', 'everest-forms' ), $name ) . '<br/>';
-				/* translators:%s: Form Entry Date */
-				$message .= '<br/>' . sprintf( __( 'We regret to inform you that your form entry submitted on %s has been denied.', 'everest-forms' ), $entry_date ) . '<br/>';
-				$message .= '<br/>' . __( 'Thank you for giving us your precious time.', 'everest-forms' ) . '<br/>';
-				/* translator: %s: Site Name */
-				$message .= '<br/>' . sprintf( __( 'From %s', 'everest-forms' ), $site_name );
-				$message  = apply_filters( 'everest_forms_entry_denial_message', $message, $name, $entry_date, $site_name );
 			}
 
-			if ( ! $is_bulk_action ) {
+			if ( '' === $name ) {
+				if ( ! empty( $first_name ) && ! empty( $last_name ) ) {
+					$name = $first_name . ' ' . $last_name;
+				} elseif ( ! empty( $first_name ) ) {
+					$name = $first_name;
+				} else {
+					$name = $last_name;
+				}
+			}
+
+			$subject = apply_filters( 'everest_forms_entry_submission_denial_subject', self::get_entry_status_email_subject( 'denial' ) );
+			$message = apply_filters( 'everest_forms_entry_denial_message', self::get_entry_status_email_message( 'denial', $name, $entry_date, $site_name ), $name, $entry_date, $site_name );
+
+			if ( ! $is_bulk_action && self::is_entry_status_email_enabled( 'denial' ) ) {
 				$email_obj = new EVF_Emails();
 				$email_obj->send( $email, $subject, $message );
 			}
