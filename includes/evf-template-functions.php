@@ -19,9 +19,11 @@ defined( 'ABSPATH' ) || exit;
 function evf_body_class( $classes ) {
 	$classes = (array) $classes;
 
-	$classes[] = 'everest-forms-no-js';
+	if ( EVF_Frontend_Scripts::current_page_has_form() ) {
+		$classes[] = 'everest-forms-no-js';
 
-	add_action( 'wp_footer', 'evf_no_js' );
+		add_action( 'wp_footer', 'evf_no_js' );
+	}
 
 	return array_unique( $classes );
 }

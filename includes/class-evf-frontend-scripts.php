@@ -42,6 +42,7 @@ class EVF_Frontend_Scripts {
 		add_action( 'wp_enqueue_scripts', array( __CLASS__, 'load_scripts' ) );
 		add_action( 'wp_print_scripts', array( __CLASS__, 'localize_printed_scripts' ), 5 );
 		add_action( 'wp_print_footer_scripts', array( __CLASS__, 'localize_printed_scripts' ), 5 );
+		add_action( 'everest_forms_shortcode_scripts', array( __CLASS__, 'enqueue_frontend_styles' ) );
 	}
 
 	/**
@@ -62,13 +63,6 @@ class EVF_Frontend_Scripts {
 					'version' => $general_version,
 					'media'   => 'all',
 					'has_rtl' => true,
-				),
-				'jquery-intl-tel-input' => array(
-					'src'     => self::get_asset_url( 'assets/css/intlTelInput/intlTelInput.css' ),
-					'deps'    => array(),
-					'version' => EVF_VERSION,
-					'media'   => 'all',
-					'has_rtl' => false,
 				),
 			)
 		);
@@ -269,10 +263,65 @@ class EVF_Frontend_Scripts {
 		self::register_scripts();
 		self::register_styles();
 
-		// Enqueue dashicons.
-		wp_enqueue_style( 'dashicons' );
+		if ( self::current_page_has_form() ) {
+			// Dashicons is only used for the form-selector block's notice icon.
+			wp_enqueue_style( 'dashicons' );
 
-		// CSS Styles.
+			self::enqueue_frontend_styles();
+		}
+	}
+
+	/**
+	 * Whether the current request is known to render an Everest Forms form.
+	 *
+	 * Scans the main post content for the `[everest_form]` shortcode, the form-selector block,
+	 * or any other registered shortcode sharing the `everest_form` tag prefix (addons such as
+	 * user registration/login use their own shortcode tags, e.g. `[everest_forms_user_login]`).
+	 * The `everest_forms_has_form_on_page` filter can override the result.
+	 *
+	 * @return bool
+	 */
+	public static function current_page_has_form() {
+		$has_form = false;
+		$post     = get_post();
+
+		if ( $post instanceof WP_Post ) {
+			$content   = (string) $post->post_content;
+			$shortcode = apply_filters( 'everest_form_shortcode_tag', 'everest_form' );
+			$has_form  = has_shortcode( $content, $shortcode )
+				|| has_block( 'everest-forms/form-selector', $post )
+				|| self::content_has_everest_forms_shortcode( $content );
+		}
+
+		return (bool) apply_filters( 'everest_forms_has_form_on_page', $has_form, $post );
+	}
+
+	/**
+	 * Whether content contains any registered shortcode sharing the `everest_form` tag prefix.
+	 *
+	 * @param string $content Post content.
+	 * @return bool
+	 */
+	private static function content_has_everest_forms_shortcode( $content ) {
+		if ( false === strpos( $content, '[' ) || ! preg_match_all( '/' . get_shortcode_regex() . '/', $content, $matches, PREG_SET_ORDER ) ) {
+			return false;
+		}
+
+		foreach ( $matches as $shortcode ) {
+			if ( 0 === strpos( $shortcode[2], 'everest_form' ) ) {
+				return true;
+			}
+		}
+
+		return false;
+	}
+
+	/**
+	 * Enqueue the general frontend form stylesheet(s).
+	 *
+	 * @return void
+	 */
+	public static function enqueue_frontend_styles() {
 		$enqueue_styles = self::get_styles();
 		if ( $enqueue_styles ) {
 			foreach ( $enqueue_styles as $handle => $args ) {
@@ -282,6 +331,29 @@ class EVF_Frontend_Scripts {
 
 				self::enqueue_style( $handle, $args['src'], $args['deps'], $args['version'], $args['media'], $args['has_rtl'] );
 			}
+
+			self::maybe_print_late_styles( array_keys( $enqueue_styles ) );
+		}
+	}
+
+	/**
+	 * Ensure the given style handle(s) actually get printed even when they're enqueued after
+	 * wp_head's style flush has already run -- e.g. a page builder, widget, or archive listing
+	 * renders the form outside what current_page_has_form() can detect in advance.
+	 *
+	 * Calling wp_enqueue_style() alone is only picked up automatically by that flush. Anything
+	 * enqueued afterward is, depending on theme type and WordPress version, either silently
+	 * dropped, hoisted into <head> (WP 6.9+, classic themes only), or printed as a footer flash
+	 * of unstyled content. Printing immediately here removes that dependency entirely and keeps
+	 * any such flash as short as possible, since the stylesheet request starts right where the
+	 * form itself renders instead of waiting for the end of the page.
+	 *
+	 * @param string|string[] $handles Style handle(s) to ensure get printed.
+	 * @return void
+	 */
+	public static function maybe_print_late_styles( $handles ) {
+		if ( did_action( 'wp_print_styles' ) ) {
+			wp_print_styles( (array) $handles );
 		}
 	}
 
@@ -346,8 +418,8 @@ class EVF_Frontend_Scripts {
 					'i18n_messages_phone'                  => esc_html( get_option( 'everest_forms_phone_validation', __( 'Please enter a valid phone number.', 'everest-forms' ) ) ),
 					'evf_smart_phone_allowed_countries'    => apply_filters( 'everest_forms_smart_phone_allowed_countries', array() ),
 					'i18n_field_rating_greater_than_max_value_error' => esc_html__( 'Please enter in a value less than 100.', 'everest-forms' ),
-					'evf_checked_image_url' 			   => esc_url( self::get_asset_url( 'assets/images/evf-checked.png' ) ),
-					'i18n_evf_success_text'				    => esc_html__( 'Success!', 'everest-forms' ),
+					'evf_checked_image_url'                => esc_url( self::get_asset_url( 'assets/images/evf-checked.png' ) ),
+					'i18n_evf_success_text'                => esc_html__( 'Success!', 'everest-forms' ),
 				);
 				break;
 			case 'everest-forms-text-limit':
@@ -358,15 +430,15 @@ class EVF_Frontend_Scripts {
 				break;
 			case 'everest-forms-ajax-submission':
 				$params = array(
-					'ajax_url'            => admin_url( 'admin-ajax.php' ),
-					'evf_ajax_submission' => wp_create_nonce( 'everest_forms_ajax_form_submission' ),
-					'submit'              => esc_html__( 'Submit', 'everest-forms' ),
-					'error'               => esc_html__( 'Something went wrong while making an AJAX submission', 'everest-forms' ),
-					'required'            => esc_html__( 'This field is required.', 'everest-forms' ),
-					'pdf_download'        => esc_html__( 'Click here to download your pdf submission', 'everest-forms' ),
-					'evf_checked_image_url' 			   => esc_url( self::get_asset_url( 'assets/images/evf-checked.png' ) ),
-					'i18n_evf_success_text'				    => esc_html__( 'Success!', 'everest-forms' ),
-					'payment_debug'       => self::is_payment_debug_enabled() ? '1' : '0',
+					'ajax_url'              => admin_url( 'admin-ajax.php' ),
+					'evf_ajax_submission'   => wp_create_nonce( 'everest_forms_ajax_form_submission' ),
+					'submit'                => esc_html__( 'Submit', 'everest-forms' ),
+					'error'                 => esc_html__( 'Something went wrong while making an AJAX submission', 'everest-forms' ),
+					'required'              => esc_html__( 'This field is required.', 'everest-forms' ),
+					'pdf_download'          => esc_html__( 'Click here to download your pdf submission', 'everest-forms' ),
+					'evf_checked_image_url' => esc_url( self::get_asset_url( 'assets/images/evf-checked.png' ) ),
+					'i18n_evf_success_text' => esc_html__( 'Success!', 'everest-forms' ),
+					'payment_debug'         => self::is_payment_debug_enabled() ? '1' : '0',
 				);
 				break;
 			case 'everest-forms-survey-polls-quiz-script':
