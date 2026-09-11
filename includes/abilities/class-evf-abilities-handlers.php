@@ -17,6 +17,18 @@ class EVF_Abilities_Handlers {
 
 	/* ------------------------------------------------------------------
 	 * Permission helpers
+	 *
+	 * The per-object checks below (singular method names, taking $input)
+	 * pass the relevant form_id/entry_id straight to current_user_can() so
+	 * WordPress's map_meta_cap (EVF_Install::filter_map_meta_cap) can apply
+	 * the plugin's own-vs-others ownership resolution. Checking a bare
+	 * plural capability (e.g. 'everest_forms_view_entries') with no object
+	 * id skips that resolution entirely, so it must never be used to gate
+	 * an ability that targets one specific object.
+	 *
+	 * The plural, no-arg methods remain for abilities with no single
+	 * object to check against a site-wide listing/count that the handler
+	 * itself scopes by author, or a genuinely global capability.
 	 * ------------------------------------------------------------------ */
 
 	public static function can_view_forms() {
@@ -27,28 +39,76 @@ class EVF_Abilities_Handlers {
 		return current_user_can( 'everest_forms_create_forms' );
 	}
 
-	public static function can_view_entries() {
-		return current_user_can( 'everest_forms_view_entries' ) || current_user_can( 'manage_everest_forms' );
-	}
-
 	public static function can_delete_entries() {
 		return current_user_can( 'everest_forms_delete_entries' ) || current_user_can( 'manage_everest_forms' );
 	}
 
-	public static function can_edit_entries() {
-		return current_user_can( 'everest_forms_edit_entries' ) || current_user_can( 'manage_everest_forms' );
-	}
-
-	public static function can_edit_forms() {
-		return current_user_can( 'everest_forms_edit_forms' ) || current_user_can( 'manage_everest_forms' );
-	}
-
-	public static function can_delete_forms() {
-		return current_user_can( 'everest_forms_delete_forms' ) || current_user_can( 'manage_everest_forms' );
-	}
-
 	public static function can_activate_plugins() {
 		return current_user_can( 'activate_plugins' );
+	}
+
+	public static function can_view_form( $input ) {
+		$form_id = isset( $input['form_id'] ) ? (int) $input['form_id'] : 0;
+		return current_user_can( 'everest_forms_view_form', $form_id ) || current_user_can( 'manage_everest_forms' );
+	}
+
+	public static function can_edit_form( $input ) {
+		$form_id = isset( $input['form_id'] ) ? (int) $input['form_id'] : 0;
+		return current_user_can( 'everest_forms_edit_form', $form_id ) || current_user_can( 'manage_everest_forms' );
+	}
+
+	public static function can_delete_form( $input ) {
+		$form_id = isset( $input['form_id'] ) ? (int) $input['form_id'] : 0;
+		return current_user_can( 'everest_forms_delete_form', $form_id ) || current_user_can( 'manage_everest_forms' );
+	}
+
+	public static function can_view_form_entries( $input ) {
+		$form_id = isset( $input['form_id'] ) ? (int) $input['form_id'] : 0;
+		return current_user_can( 'everest_forms_view_form_entries', $form_id ) || current_user_can( 'manage_everest_forms' );
+	}
+
+	public static function can_edit_form_entries( $input ) {
+		$form_id = isset( $input['form_id'] ) ? (int) $input['form_id'] : 0;
+		return current_user_can( 'everest_forms_edit_form_entries', $form_id ) || current_user_can( 'manage_everest_forms' );
+	}
+
+	public static function can_view_entry( $input ) {
+		$entry_id = isset( $input['entry_id'] ) ? (int) $input['entry_id'] : 0;
+		return current_user_can( 'everest_forms_view_entry', $entry_id ) || current_user_can( 'manage_everest_forms' );
+	}
+
+	public static function can_edit_entry( $input ) {
+		$entry_id = isset( $input['entry_id'] ) ? (int) $input['entry_id'] : 0;
+		return current_user_can( 'everest_forms_edit_entry', $entry_id ) || current_user_can( 'manage_everest_forms' );
+	}
+
+	public static function can_delete_entry( $input ) {
+		$entry_id = isset( $input['entry_id'] ) ? (int) $input['entry_id'] : 0;
+		return current_user_can( 'everest_forms_delete_entry', $entry_id ) || current_user_can( 'manage_everest_forms' );
+	}
+
+	/**
+	 * count-entries / analytics-summary accept form_id=0 to mean "site-wide".
+	 * A single object-id check can't gate that, so this only confirms the
+	 * caller may call the ability at all; the handlers additionally scope
+	 * their own queries to the caller's forms when form_id is 0 and the
+	 * caller lacks the "others" capability.
+	 */
+	public static function can_view_entries_scope( $input ) {
+		$form_id = isset( $input['form_id'] ) ? (int) $input['form_id'] : 0;
+		if ( $form_id > 0 ) {
+			return current_user_can( 'everest_forms_view_form_entries', $form_id ) || current_user_can( 'manage_everest_forms' );
+		}
+		return current_user_can( 'everest_forms_view_entries' ) || current_user_can( 'everest_forms_view_others_entries' ) || current_user_can( 'manage_everest_forms' );
+	}
+
+	/**
+	 * Whether a site-wide (form_id=0) entries query must be restricted to
+	 * forms the current user owns, i.e. they lack both the "others" entries
+	 * capability and manage_everest_forms.
+	 */
+	protected static function needs_own_entries_scope() {
+		return ! current_user_can( 'everest_forms_view_others_entries' ) && ! current_user_can( 'manage_everest_forms' );
 	}
 
 	/* ------------------------------------------------------------------
@@ -73,6 +133,10 @@ class EVF_Abilities_Handlers {
 			$query_args['post_status'] = $status;
 		} else {
 			$query_args['post_status'] = array( 'publish', 'draft', 'trash' );
+		}
+
+		if ( ! current_user_can( 'everest_forms_view_others_forms' ) && ! current_user_can( 'manage_everest_forms' ) ) {
+			$query_args['author'] = get_current_user_id();
 		}
 
 		$forms = get_posts( $query_args );
@@ -519,8 +583,33 @@ class EVF_Abilities_Handlers {
 			return new WP_Error( 'evf_no_ids', 'Provide one or more entry_ids.', array( 'status' => 400 ) );
 		}
 
+		$requested = count( $ids );
+
+		// permission_callback only confirms the caller may delete entries at
+		// all (an array of ids can't be gated as one object); check each id
+		// individually here, the same way the single-entry delete-entry
+		// ability does via its own per-object permission_callback.
+		$can_manage_all = current_user_can( 'manage_everest_forms' );
+		$unauthorized   = array();
+		$ids            = array_values(
+			array_filter(
+				$ids,
+				function ( $entry_id ) use ( $can_manage_all, &$unauthorized ) {
+					if ( $can_manage_all || current_user_can( 'everest_forms_delete_entry', $entry_id ) ) {
+						return true;
+					}
+					$unauthorized[] = $entry_id;
+					return false;
+				}
+			)
+		);
+
+		if ( empty( $ids ) ) {
+			return new WP_Error( 'evf_forbidden', 'Permission denied for all provided entry_ids.', array( 'status' => 403 ) );
+		}
+
 		$deleted = 0;
-		$skipped = array();
+		$skipped = $unauthorized;
 
 		if ( ! $permanent ) {
 			// Single UPDATE for the soft-delete case — much cheaper than N round-trips.
@@ -532,7 +621,8 @@ class EVF_Abilities_Handlers {
 			}
 			return array(
 				'trashed'    => (int) $result,
-				'requested'  => count( $ids ),
+				'requested'  => $requested,
+				'skipped'    => $skipped,
 				'permanent'  => false,
 			);
 		}
@@ -550,7 +640,7 @@ class EVF_Abilities_Handlers {
 
 		return array(
 			'deleted'   => $deleted,
-			'requested' => count( $ids ),
+			'requested' => $requested,
 			'skipped'   => $skipped,
 			'permanent' => true,
 		);
@@ -566,7 +656,7 @@ class EVF_Abilities_Handlers {
 		if ( ! $post || 'everest_form' !== $post->post_type ) {
 			return new WP_Error( 'evf_form_not_found', 'Form not found.', array( 'status' => 404 ) );
 		}
-		// We've already gated on `can_delete_forms` in the permission_callback,
+		// We've already gated on `can_delete_form` in the permission_callback,
 		// so bypass EVF_Form_Handler::delete()'s 'everest_forms_delete' cap check
 		// (singular cap that isn't granted by default) and delete directly.
 		$deleted = wp_delete_post( $form_id, true );
@@ -583,6 +673,12 @@ class EVF_Abilities_Handlers {
 	 */
 	public static function duplicate_form( $input ) {
 		$form_id = (int) $input['form_id'];
+		// permission_callback (can_create_forms) only confirms the caller may
+		// create new forms at all -- it says nothing about the SOURCE form
+		// being copied, which is a different object. Check that separately.
+		if ( ! current_user_can( 'everest_forms_view_form', $form_id ) && ! current_user_can( 'manage_everest_forms' ) ) {
+			return new WP_Error( 'evf_form_forbidden', 'Not allowed to duplicate this form.', array( 'status' => 403 ) );
+		}
 		$result  = evf()->form->duplicate( array( $form_id ) );
 		if ( ! $result ) {
 			return new WP_Error( 'evf_form_duplicate_failed', 'Form could not be duplicated.', array( 'status' => 500 ) );
@@ -665,9 +761,6 @@ class EVF_Abilities_Handlers {
 		$entry    = function_exists( 'evf_get_entry' ) ? evf_get_entry( $entry_id, true ) : null;
 		if ( ! $entry ) {
 			return new WP_Error( 'evf_entry_not_found', 'Entry not found.', array( 'status' => 404 ) );
-		}
-		if ( ! self::can_view_entries() ) {
-			return new WP_Error( 'evf_forbidden', 'Permission denied.', array( 'status' => 403 ) );
 		}
 		$meta = isset( $entry->meta ) ? $entry->meta : array();
 		return array(
@@ -781,7 +874,20 @@ class EVF_Abilities_Handlers {
 		global $wpdb;
 		$form_id = isset( $input['form_id'] ) ? (int) $input['form_id'] : 0;
 		$table   = $wpdb->prefix . 'evf_entries';
-		$where   = $form_id > 0 ? $wpdb->prepare( 'WHERE form_id = %d', $form_id ) : '';
+
+		if ( $form_id > 0 ) {
+			$where = $wpdb->prepare( 'WHERE form_id = %d', $form_id );
+		} elseif ( self::needs_own_entries_scope() ) {
+			// Site-wide (form_id=0) request from a caller who only holds the
+			// own-scoped capability -- restrict to entries whose form they
+			// own instead of exposing every user's entry counts.
+			$where = $wpdb->prepare(
+				"WHERE form_id IN ( SELECT ID FROM {$wpdb->posts} WHERE post_type = 'everest_form' AND post_author = %d )",
+				get_current_user_id()
+			);
+		} else {
+			$where = '';
+		}
 
 		$total    = (int) $wpdb->get_var( "SELECT COUNT(*) FROM {$table} {$where}" );
 		$unread   = (int) $wpdb->get_var( "SELECT COUNT(*) FROM {$table} {$where} " . ( '' === $where ? 'WHERE' : 'AND' ) . " viewed = 0 AND status <> 'trash'" );
@@ -789,8 +895,9 @@ class EVF_Abilities_Handlers {
 
 		$by_status = array();
 		foreach ( array( 'publish', 'approved', 'denied', 'pending', 'spam', 'trash' ) as $st ) {
-			$by_status[ $st ] = (int) $wpdb->get_var(
-				$wpdb->prepare( "SELECT COUNT(*) FROM {$table} " . ( $form_id > 0 ? 'WHERE form_id = %d AND' : 'WHERE' ) . " status = %s", $form_id > 0 ? array( $form_id, $st ) : array( $st ) )
+			$status_clause     = '' === $where ? 'WHERE' : $where . ' AND';
+			$by_status[ $st ]  = (int) $wpdb->get_var(
+				$wpdb->prepare( "SELECT COUNT(*) FROM {$table} {$status_clause} status = %s", $st )
 			);
 		}
 
@@ -996,21 +1103,34 @@ class EVF_Abilities_Handlers {
 		$since   = gmdate( 'Y-m-d H:i:s', time() - ( $days * DAY_IN_SECONDS ) );
 
 		$table = $wpdb->prefix . 'evf_entries';
+		$scope = ( 0 === $form_id ) && self::needs_own_entries_scope();
 
-		$total_forms = (int) $wpdb->get_var( "SELECT COUNT(*) FROM {$wpdb->posts} WHERE post_type = 'everest_form' AND post_status = 'publish'" );
+		$forms_scope = $scope ? $wpdb->prepare( ' AND post_author = %d', get_current_user_id() ) : '';
+		$total_forms = (int) $wpdb->get_var( "SELECT COUNT(*) FROM {$wpdb->posts} WHERE post_type = 'everest_form' AND post_status = 'publish'{$forms_scope}" );
 
 		if ( $form_id > 0 ) {
 			$total_entries   = (int) $wpdb->get_var( $wpdb->prepare( "SELECT COUNT(*) FROM {$table} WHERE form_id = %d", $form_id ) );
 			$recent_entries  = (int) $wpdb->get_var( $wpdb->prepare( "SELECT COUNT(*) FROM {$table} WHERE form_id = %d AND date_created >= %s", $form_id, $since ) );
 			$top_forms       = array();
 		} else {
-			$total_entries  = (int) $wpdb->get_var( "SELECT COUNT(*) FROM {$table}" );
-			$recent_entries = (int) $wpdb->get_var( $wpdb->prepare( "SELECT COUNT(*) FROM {$table} WHERE date_created >= %s", $since ) );
+			// form_id=0 means "site-wide"; restrict to the caller's own forms
+			// unless they hold the "others" entries capability or manage_everest_forms.
+			$entries_scope = $scope
+				? $wpdb->prepare(
+					" AND form_id IN ( SELECT ID FROM {$wpdb->posts} WHERE post_type = 'everest_form' AND post_author = %d )",
+					get_current_user_id()
+				)
+				: '';
 
-			$rows = $wpdb->get_results( $wpdb->prepare(
-				"SELECT form_id, COUNT(*) AS cnt FROM {$table} WHERE date_created >= %s GROUP BY form_id ORDER BY cnt DESC LIMIT 5",
-				$since
-			) );
+			$total_entries  = (int) $wpdb->get_var( "SELECT COUNT(*) FROM {$table} WHERE 1=1{$entries_scope}" );
+			$recent_entries = (int) $wpdb->get_var( $wpdb->prepare( "SELECT COUNT(*) FROM {$table} WHERE date_created >= %s", $since ) . $entries_scope );
+
+			$rows = $wpdb->get_results(
+				$wpdb->prepare(
+					"SELECT form_id, COUNT(*) AS cnt FROM {$table} WHERE date_created >= %s{$entries_scope} GROUP BY form_id ORDER BY cnt DESC LIMIT 5",
+					$since
+				)
+			);
 			$top_forms = array();
 			foreach ( (array) $rows as $row ) {
 				$post = get_post( (int) $row->form_id );
