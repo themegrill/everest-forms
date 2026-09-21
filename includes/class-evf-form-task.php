@@ -727,7 +727,7 @@ class EVF_Form_Task {
 			 * @since 3.2.3
 			 */
 			foreach ( $this->form_fields as $key => $value ) {
-				if ( ! empty( $value['value'] ) && is_string( $value['value'] ) && strpos( $value['value'], '{' ) !== false ) {
+				if ( 'hidden' === $value['type'] && ! empty( $value['value'] ) && is_string( $value['value'] ) && strpos( $value['value'], '{' ) !== false ) {
 					$this->form_fields[ $key ]['value'] = apply_filters( 'everest_forms_process_smart_tags', $value['value'], $this->form_data, $this->form_fields );
 				}
 			}
@@ -1578,7 +1578,7 @@ class EVF_Form_Task {
 				}
 
 				if ( isset( $field['meta_key'], $field['value'] ) && '' !== $field['value'] ) {
-					if ( ! empty( $field['value'] ) && is_string( $field['value'] ) && strpos( $field['value'], '{' ) !== false ) {
+					if ( 'hidden' === $field['type'] && ! empty( $field['value'] ) && is_string( $field['value'] ) && strpos( $field['value'], '{' ) !== false ) {
 						$field['value'] = apply_filters( 'everest_forms_process_smart_tags', $field['value'], $form_data, $fields, $entry_id );
 					}
 					$entry_metadata = array(

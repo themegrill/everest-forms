@@ -2,7 +2,7 @@
 # This file is distributed under the no.
 msgid ""
 msgstr ""
-"Project-Id-Version: Everest Forms 3.6.1\n"
+"Project-Id-Version: Everest Forms 3.6.2\n"
 "Report-Msgid-Bugs-To: https://wordpress.org/support/plugin/everest-forms\n"
 "POT-Creation-Date: 2026-09-02 09:15:26+00:00\n"
 "MIME-Version: 1.0\n"

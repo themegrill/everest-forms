@@ -1,0 +1,96 @@
+{
+  "runner": "playwright",
+  "package_manager": "npm",
+  "install": "npm ci --legacy-peer-deps",
+  "command": "npx playwright test --config=tests/e2e/playwright.config.ts",
+  "spec_dir": "tests/e2e/specs",
+  "spec_extension": ".spec.ts",
+  "json_report": "test-results/results.json",
+  "env": {
+    "base_url": "EVEREST_FORMS_BASE_URL",
+    "admin_user": "EVEREST_FORMS_ADMIN_USER",
+    "admin_pass": "EVEREST_FORMS_ADMIN_PASS"
+  },
+  "tiers": {
+    "fresh": "@fresh",
+    "demo": "@demo"
+  },
+  "config": "tests/e2e/playwright.config.ts",
+  "area_paths": {
+    "activation": [
+      "everest-forms.php",
+      "includes/class-everest-forms.php",
+      "includes/class-evf-install.php",
+      "includes/class-evf-autoloader.php",
+      "includes/class-evf-post-types.php",
+      "includes/admin/class-evf-admin.php",
+      "includes/admin/class-evf-admin-menus.php",
+      "includes/admin/class-evf-admin-assets.php"
+    ],
+    "forms": [
+      "includes/class-evf-form-handler.php",
+      "includes/abstracts/class-evf-form-fields.php",
+      "includes/fields/**",
+      "includes/admin/builder/**",
+      "assets/js/admin/form-builder*.js",
+      "includes/RestApi/controllers/version1/class-evf-templates.php",
+      "includes/templates/**",
+      "templates/**"
+    ],
+    "entries": [
+      "includes/admin/class-evf-admin-entries*.php",
+      "includes/class-evf-entry*.php",
+      "includes/export/**",
+      "includes/RestApi/controllers/version1/class-evf-entry-submission.php",
+      "assets/css/components/_entries-views.scss"
+    ],
+    "submission": [
+      "includes/class-evf-form-task.php",
+      "includes/class-evf-frontend-scripts.php",
+      "includes/class-evf-shortcodes.php",
+      "includes/shortcodes/**",
+      "includes/class-evf-smart-tags.php"
+    ],
+    "settings": [
+      "includes/admin/settings/**",
+      "includes/admin/class-evf-admin-settings.php"
+    ],
+    "email": [
+      "includes/class-evf-emails.php",
+      "includes/class-evf-email-entries-report.php",
+      "includes/fields/class-evf-field-email.php",
+      "templates/emails/**",
+      "includes/admin/settings/class-evf-settings-email.php",
+      "includes/admin/settings/class-evf-settings-reporting.php"
+    ],
+    "style-customizer": [
+      "addons/StyleCustomizer/**",
+      "src/style-customizer-v2/**",
+      "dist/styleCustomizerV2*.js"
+    ],
+    "integrations": [
+      "includes/Integrations/**",
+      "includes/admin/settings/class-evf-settings-integrations.php",
+      "addons/CleanTalk/**",
+      "addons/ShieldSilentCaptcha/**"
+    ],
+    "page-builders": [
+      "addons/BeaverBuilder/**",
+      "addons/BricksBuilder/**",
+      "addons/DiviBuilder/**",
+      "addons/OxygenBuilder/**",
+      "addons/WPBakeryBuilder/**",
+      "includes/elementor/**",
+      "includes/blocks/**"
+    ],
+    "rest-api": [
+      "includes/RestApi/**",
+      "includes/abilities/**"
+    ],
+    "upgrade": [
+      "includes/evf-update-functions.php",
+      "includes/class-evf-background-updater.php",
+      "includes/class-evf-install.php"
+    ]
+  }
+}

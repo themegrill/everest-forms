@@ -477,7 +477,7 @@ class EVF_Smart_Tags {
 					case 'post_meta':
 						preg_match_all( '/key\=(.*?)$/', $tag, $meta );
 
-						if ( is_array( $meta ) && ! empty( $meta[1][0] ) ) {
+						if ( is_array( $meta ) && ! empty( $meta[1][0] ) && ! is_protected_meta( $meta[1][0], 'post' ) ) {
 							$key = $meta[1][0];
 
 							$args = array(
@@ -509,7 +509,7 @@ class EVF_Smart_Tags {
 					case 'posts_meta_current_page_id':
 						preg_match_all( '/key\=(.*?)$/', $tag, $meta );
 
-						if ( is_array( $meta ) && ! empty( $meta[1][0] ) ) {
+						if ( is_array( $meta ) && ! empty( $meta[1][0] ) && ! is_protected_meta( $meta[1][0], 'post' ) ) {
 							$key = $meta[1][0];
 
 							$args = array(
@@ -548,7 +548,7 @@ class EVF_Smart_Tags {
 						break;
 					case 'user_meta':
 						preg_match_all( '/key\=(.*?)$/', $tag, $meta );
-						if ( is_array( $meta ) && ! empty( $meta[1][0] ) ) {
+						if ( is_array( $meta ) && ! empty( $meta[1][0] ) && ! is_protected_meta( $meta[1][0], 'user' ) ) {
 							$key     = $meta[1][0];
 							$value   = get_user_meta( get_current_user_id(), $key, true );
 							$content = str_replace( '{' . $tag . '}', wp_kses_post( $value ), $content );
