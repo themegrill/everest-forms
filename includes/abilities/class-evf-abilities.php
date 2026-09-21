@@ -216,7 +216,7 @@ class EVF_Abilities {
 					),
 					'output_schema'       => array( 'type' => 'object' ),
 					'execute_callback'    => array( 'EVF_Abilities_Handlers', 'get_form' ),
-					'permission_callback' => array( 'EVF_Abilities_Handlers', 'can_view_forms' ),
+					'permission_callback' => array( 'EVF_Abilities_Handlers', 'can_view_form' ),
 				),
 			),
 			array(
@@ -309,7 +309,7 @@ class EVF_Abilities {
 					),
 					'output_schema'       => array( 'type' => 'object' ),
 					'execute_callback'    => array( 'EVF_Abilities_Handlers', 'update_form' ),
-					'permission_callback' => array( 'EVF_Abilities_Handlers', 'can_edit_forms' ),
+					'permission_callback' => array( 'EVF_Abilities_Handlers', 'can_edit_form' ),
 				),
 			),
 			array(
@@ -327,7 +327,7 @@ class EVF_Abilities {
 					),
 					'output_schema'       => array( 'type' => 'object' ),
 					'execute_callback'    => array( 'EVF_Abilities_Handlers', 'update_form_status' ),
-					'permission_callback' => array( 'EVF_Abilities_Handlers', 'can_edit_forms' ),
+					'permission_callback' => array( 'EVF_Abilities_Handlers', 'can_edit_form' ),
 				),
 			),
 			array(
@@ -365,7 +365,7 @@ class EVF_Abilities {
 					),
 					'output_schema'       => array( 'type' => 'object' ),
 					'execute_callback'    => array( 'EVF_Abilities_Handlers', 'delete_form' ),
-					'permission_callback' => array( 'EVF_Abilities_Handlers', 'can_delete_forms' ),
+					'permission_callback' => array( 'EVF_Abilities_Handlers', 'can_delete_form' ),
 				),
 			),
 			array(
@@ -460,7 +460,7 @@ class EVF_Abilities {
 					),
 					'output_schema'       => array( 'type' => 'array' ),
 					'execute_callback'    => array( 'EVF_Abilities_Handlers', 'list_entries' ),
-					'permission_callback' => array( 'EVF_Abilities_Handlers', 'can_view_entries' ),
+					'permission_callback' => array( 'EVF_Abilities_Handlers', 'can_view_form_entries' ),
 				),
 			),
 			array(
@@ -477,7 +477,7 @@ class EVF_Abilities {
 					),
 					'output_schema'       => array( 'type' => 'object' ),
 					'execute_callback'    => array( 'EVF_Abilities_Handlers', 'get_entry' ),
-					'permission_callback' => array( 'EVF_Abilities_Handlers', 'can_view_entries' ),
+					'permission_callback' => array( 'EVF_Abilities_Handlers', 'can_view_entry' ),
 				),
 			),
 			array(
@@ -495,7 +495,7 @@ class EVF_Abilities {
 					),
 					'output_schema'       => array( 'type' => 'object' ),
 					'execute_callback'    => array( 'EVF_Abilities_Handlers', 'delete_entry' ),
-					'permission_callback' => array( 'EVF_Abilities_Handlers', 'can_delete_entries' ),
+					'permission_callback' => array( 'EVF_Abilities_Handlers', 'can_delete_entry' ),
 				),
 			),
 			array(
@@ -513,7 +513,7 @@ class EVF_Abilities {
 					),
 					'output_schema'       => array( 'type' => 'object' ),
 					'execute_callback'    => array( 'EVF_Abilities_Handlers', 'update_entry_status' ),
-					'permission_callback' => array( 'EVF_Abilities_Handlers', 'can_edit_entries' ),
+					'permission_callback' => array( 'EVF_Abilities_Handlers', 'can_edit_entry' ),
 				),
 			),
 			array(
@@ -531,7 +531,7 @@ class EVF_Abilities {
 					),
 					'output_schema'       => array( 'type' => 'object' ),
 					'execute_callback'    => array( 'EVF_Abilities_Handlers', 'set_entry_starred' ),
-					'permission_callback' => array( 'EVF_Abilities_Handlers', 'can_edit_entries' ),
+					'permission_callback' => array( 'EVF_Abilities_Handlers', 'can_edit_entry' ),
 				),
 			),
 			array(
@@ -549,7 +549,7 @@ class EVF_Abilities {
 					),
 					'output_schema'       => array( 'type' => 'object' ),
 					'execute_callback'    => array( 'EVF_Abilities_Handlers', 'set_entry_viewed' ),
-					'permission_callback' => array( 'EVF_Abilities_Handlers', 'can_edit_entries' ),
+					'permission_callback' => array( 'EVF_Abilities_Handlers', 'can_edit_entry' ),
 				),
 			),
 			array(
@@ -565,7 +565,7 @@ class EVF_Abilities {
 					),
 					'output_schema'       => array( 'type' => 'object' ),
 					'execute_callback'    => array( 'EVF_Abilities_Handlers', 'count_entries' ),
-					'permission_callback' => array( 'EVF_Abilities_Handlers', 'can_view_entries' ),
+					'permission_callback' => array( 'EVF_Abilities_Handlers', 'can_view_entries_scope' ),
 				),
 			),
 			array(
@@ -584,7 +584,7 @@ class EVF_Abilities {
 					),
 					'output_schema'       => array( 'type' => 'object' ),
 					'execute_callback'    => array( 'EVF_Abilities_Handlers', 'create_entry' ),
-					'permission_callback' => array( 'EVF_Abilities_Handlers', 'can_edit_entries' ),
+					'permission_callback' => array( 'EVF_Abilities_Handlers', 'can_edit_form_entries' ),
 				),
 			),
 			array(
@@ -602,7 +602,7 @@ class EVF_Abilities {
 					),
 					'output_schema'       => array( 'type' => 'object' ),
 					'execute_callback'    => array( 'EVF_Abilities_Handlers', 'update_entry_fields' ),
-					'permission_callback' => array( 'EVF_Abilities_Handlers', 'can_edit_entries' ),
+					'permission_callback' => array( 'EVF_Abilities_Handlers', 'can_edit_entry' ),
 				),
 			),
 			array(
@@ -619,7 +619,7 @@ class EVF_Abilities {
 					),
 					'output_schema'       => array( 'type' => 'object' ),
 					'execute_callback'    => array( 'EVF_Abilities_Handlers', 'analytics_summary' ),
-					'permission_callback' => array( 'EVF_Abilities_Handlers', 'can_view_entries' ),
+					'permission_callback' => array( 'EVF_Abilities_Handlers', 'can_view_entries_scope' ),
 				),
 			),
 		);
