@@ -13,7 +13,8 @@
 	}
 
 	window.evfShowToast = function (message, type, duration) {
-		type = type || 'info';
+		var allowedToastTypes = ['success', 'error', 'info', 'warning'];
+		type = allowedToastTypes.indexOf(type) !== -1 ? type : 'info';
 		duration = typeof duration === 'number' ? duration : 4000;
 
 		var $container = evfGetToastContainer();
