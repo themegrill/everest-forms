@@ -160,7 +160,7 @@ class EVF_Admin_Forms_Table_List extends EVF_Base_List_Table {
 			}
 
 			if ( current_user_can( 'everest_forms_view_form_entries', $posts->ID ) ) {
-				$name = '<a href="' . esc_url( esc_url( admin_url( 'admin.php?page=evf-entries&amp;form_id=' . $posts->ID ) ) ) . '" title="' . esc_html__( 'View Entries', 'everest-forms' ) . '" class="row-title">' . esc_html( $title ) . '</a>';
+				$name = '<a href="' . esc_url( admin_url( 'admin.php?page=evf-entries&amp;form_id=' . $posts->ID ) ) . '" title="' . esc_html__( 'View Entries', 'everest-forms' ) . '" class="row-title">' . esc_html( $title ) . '</a>';
 			}
 
 			if ( current_user_can( 'everest_forms_edit_form', $posts->ID ) ) {
