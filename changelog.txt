@@ -1,5 +1,10 @@
 == Changelog ==
 
+= 3.6.2       - 21-09-2026
+* Fix 		  - Improved security of smart tag processing for submitted form field values.
+* Fix 		  - Improved security of permission checks for MCP-based form and entry access.
+* Fix 		  - Improved security of admin notification message rendering.
+
 = 3.6.1       - 07-09-2026
 * Fix 		  - Date/Time dropdown fields showed today's date instead of the saved value, and Smart Phone fields lost their country code, when editing an existing entry.
 * Fix 		  - Query parameters in external redirect URLs were HTML-encoded, causing incorrect values.
