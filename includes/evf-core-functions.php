@@ -4781,7 +4781,7 @@ function evf_sanitize_builder($post_data = array())
 			$value = wp_kses_post( $data->value );
 		} elseif ( 'settings[external_url]' === $data->name ) {
 			$value = esc_url_raw( $data->value );
-		} elseif ( preg_match( '/evf_email_message/', $data->name ) || preg_match( '/telegram_message/', $data->name ) || preg_match( '/slack_message/', $data->name ) ) {
+		} elseif ( preg_match( '/evf_email_message/', $data->name ) || preg_match( '/telegram_message/', $data->name ) || preg_match( '/slack_message/', $data->name ) || preg_match( '/user_registration_email_.*_message/', $data->name ) ) {
 			$value = wp_kses_post( $data->value );
 		} elseif ( preg_match( '/calculation_field/', $data->name ) ) {
 			$value = wp_kses_post( $data->value );
