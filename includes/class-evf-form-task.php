@@ -87,6 +87,7 @@ class EVF_Form_Task {
 		 */
 		add_action( 'before_delete_post', array( $this, 'delete_entry_files_before_form_delete' ), 10, 1 );
 		add_action( 'everest_forms_before_delete_entries', array( $this, 'delete_entry_files' ), 10, 1 );
+		add_action( 'everest_forms_after_delete_entries', array( $this, 'evf_cleanup_approval_tokens' ), 10, 2 );
 	}
 
 	/**
@@ -1881,74 +1882,85 @@ class EVF_Form_Task {
 			return;
 		}
 
-		if ( current_user_can( 'edit_users' ) ) {
-			global $wpdb;
-			$evf_admin_approve_entry_token_raw = sanitize_text_field( wp_unslash( $_GET['evf_admin_approval_entry_token'] ) ); // phpcs:ignore WordPress.Security.NonceVerification
+		if ( ! current_user_can( 'edit_users' ) ) {
+			wp_die( esc_html__( 'You are not allowed to perform this action.', 'everest-forms' ), '', array( 'response' => 403 ) );
+		}
 
-			$evf_admin_approval_entry_enable = get_option( 'everest_forms_admin_approval_entries_enable', 'no' );
-			$evf_admin_form_id               = isset( $_GET['form_id'] ) ? absint( $_GET['form_id'] ) : 0; // phpcs:ignore WordPress.Security.NonceVerification
-			$evf_admin_entry_id              = isset( $_GET['entry_id'] ) ? absint( $_GET['entry_id'] ) : 0; // phpcs:ignore WordPress.Security.NonceVerification
-			$evf_entry_redirect_url          = admin_url() . 'admin.php?page=evf-entries&form_id=' . $evf_admin_form_id . '&view-entry=' . $evf_admin_entry_id;
-			$evf_admin_entry_saved_token     = get_option( 'everest_forms_admin_entry_approval_token', array() );
-			$site_name                       = get_option( 'blogname' );
+		global $wpdb;
+		$evf_admin_approve_entry_token_raw = sanitize_text_field( wp_unslash( $_GET['evf_admin_approval_entry_token'] ) ); // phpcs:ignore WordPress.Security.NonceVerification
 
-			if ( 'yes' === $evf_admin_approval_entry_enable ) {
-				$evf_admin_approval_entry_token = isset( $_GET['evf_admin_approval_entry_token'] ) ? sanitize_text_field( wp_unslash( $_GET['evf_admin_approval_entry_token'] ) ) : ''; // phpcs:ignore WordPress.Security.NonceVerification
-				if ( in_array( $evf_admin_approve_entry_token_raw, $evf_admin_entry_saved_token ) ) {
-					$evf_admin_approval_approved = $wpdb->query( $wpdb->prepare( "UPDATE {$wpdb->prefix}evf_entries SET status = %s WHERE entry_id = %s ", 'publish', $evf_admin_entry_id ) );
-					$entry                       = evf_get_entry( $evf_admin_entry_id );
-					$entry_meta                  = $entry->meta;
-					$first_name                  = '';
-					$last_name                   = '';
-					$email                       = '';
-					$entry_date                  = $entry->date_created;
-					$name                        = '';
+		$evf_admin_approval_entry_enable = get_option( 'everest_forms_admin_approval_entries_enable', 'no' );
+		$evf_admin_form_id               = isset( $_GET['form_id'] ) ? absint( $_GET['form_id'] ) : 0; // phpcs:ignore WordPress.Security.NonceVerification
+		$evf_admin_entry_id              = isset( $_GET['entry_id'] ) ? absint( $_GET['entry_id'] ) : 0; // phpcs:ignore WordPress.Security.NonceVerification
+		$evf_entry_redirect_url          = admin_url() . 'admin.php?page=evf-entries&form_id=' . $evf_admin_form_id . '&view-entry=' . $evf_admin_entry_id;
+		$evf_admin_entry_saved_token     = get_option( 'everest_forms_admin_entry_approval_token', array() );
+		$site_name                       = get_option( 'blogname' );
 
-					foreach ( $entry_meta as $key => $value ) {
-						if ( preg_match( '/^name/', $key ) ) {
-							$name = $value;
-						}
+		if ( 'yes' !== $evf_admin_approval_entry_enable ) {
+			wp_die( esc_html__( 'Entry approval is not enabled for this site.', 'everest-forms' ), '', array( 'response' => 403 ) );
+		}
 
-						if ( preg_match( '/^first_name_/', $key ) ) {
-							$first_name = $value;
-						}
+		$evf_approval_key         = 'approval_token_' . $evf_admin_entry_id;
+		$evf_admin_expected_token = isset( $evf_admin_entry_saved_token[ $evf_approval_key ] ) ? $evf_admin_entry_saved_token[ $evf_approval_key ] : '';
 
-						if ( preg_match( '/^last_name_/', $key ) ) {
-							$last_name = $value;
-						}
+		// Bind the token to the specific entry it was issued for instead of accepting any valid token in the option.
+		if ( '' === $evf_admin_expected_token || ! hash_equals( $evf_admin_expected_token, $evf_admin_approve_entry_token_raw ) ) {
+			wp_die( esc_html__( 'This approval link is invalid or has already been used.', 'everest-forms' ), '', array( 'response' => 403, 'back_link' => true ) );
+		}
 
-						if ( preg_match( '/^email/', $key ) ) {
-							$email = $value;
-						}
+		$evf_admin_approval_approved = $wpdb->query( $wpdb->prepare( "UPDATE {$wpdb->prefix}evf_entries SET status = %s WHERE entry_id = %d ", 'publish', $evf_admin_entry_id ) );
+		$entry                       = evf_get_entry( $evf_admin_entry_id );
+		$entry_meta                  = $entry->meta;
+		$first_name                  = '';
+		$last_name                   = '';
+		$email                       = '';
+		$entry_date                  = $entry->date_created;
+		$name                        = '';
+		$subject                     = '';
+		$message                     = '';
 
-						if ( '' === $name ) {
-							if ( ! empty( $first_name ) && ! empty( $last_name ) ) {
-								$name = $first_name . ' ' . $last_name;
-							} elseif ( ! empty( $first_name ) ) {
-								$name = $first_name;
-							} else {
-								$name = $last_name;
-							}
-						}
+		foreach ( $entry_meta as $key => $value ) {
+			if ( preg_match( '/^name_/', $key ) ) {
+				$name = $value;
+			}
 
-						$subject = apply_filters( 'everest_forms_entry_submission_approval_subject', esc_html__( 'Form Entry Approved', 'everest-forms' ) );
-						// translators: %s is the name of the user
-						$message = sprintf( __( 'Hey, %s', 'everest-forms' ), $name ) . '<br/>';
-						// translators: %s is the entry_date.
-						$message .= '<br/>' . sprintf( __( 'We’re pleased to inform you that your form entry submitted on %s has been successfully approved.', 'everest-forms' ), $entry_date ) . '<br/>';
-						$message .= '<br/>' . __( 'Thank you for giving us your precious time.', 'everest-forms' ) . '<br/>';
-						// translators: %s is the site_name.
-						$message .= '<br/>' . sprintf( __( 'From %s', 'everest-forms' ), $site_name );
-						// translators: %s is the message.
-						$message = apply_filters( 'everest_forms_entry_approval_message', $message, $name, $entry_date, $site_name );
-					}
+			if ( preg_match( '/^first_name_/', $key ) ) {
+				$first_name = $value;
+			}
 
-					$email_obj = new EVF_Emails();
-					$test      = $email_obj->send( $email, $subject, $message );
-					wp_redirect( $evf_entry_redirect_url );
-				}
+			if ( preg_match( '/^last_name_/', $key ) ) {
+				$last_name = $value;
+			}
+
+			if ( preg_match( '/^email/', $key ) ) {
+				$email = $value;
 			}
 		}
+
+		if ( '' === $name ) {
+			if ( ! empty( $first_name ) && ! empty( $last_name ) ) {
+				$name = $first_name . ' ' . $last_name;
+			} elseif ( ! empty( $first_name ) ) {
+				$name = $first_name;
+			} else {
+				$name = $last_name;
+			}
+		}
+
+		$subject = apply_filters( 'everest_forms_entry_submission_approval_subject', EVF_Admin_Entries::get_entry_status_email_subject( 'approval' ) );
+		$message = apply_filters( 'everest_forms_entry_approval_message', EVF_Admin_Entries::get_entry_status_email_message( 'approval', $name, $entry_date, $site_name ), $name, $entry_date, $site_name );
+
+		if ( EVF_Admin_Entries::is_entry_status_email_enabled( 'approval' ) ) {
+			$email_obj = new EVF_Emails();
+			$email_obj->send( $email, $subject, $message );
+		}
+
+		// Invalidate both the approve and deny links for this entry now that it has been actioned.
+		unset( $evf_admin_entry_saved_token[ $evf_approval_key ], $evf_admin_entry_saved_token[ 'denial_token_' . $evf_admin_entry_id ] );
+		update_option( 'everest_forms_admin_entry_approval_token', $evf_admin_entry_saved_token );
+
+		wp_redirect( $evf_entry_redirect_url );
+		exit;
 	}
 
 	/**
@@ -1961,75 +1973,93 @@ class EVF_Form_Task {
 			return;
 		}
 
-		if ( current_user_can( 'edit_users' ) ) {
-			global $wpdb;
+		if ( ! current_user_can( 'edit_users' ) ) {
+			wp_die( esc_html__( 'You are not allowed to perform this action.', 'everest-forms' ), '', array( 'response' => 403 ) );
+		}
 
-			$evf_admin_approve_entry_token_raw = isset( $_GET['evf_admin_denial_entry_token'] ) ? sanitize_text_field( wp_unslash( $_GET['evf_admin_denial_entry_token'] ) ) : ''; // phpcs:ignore WordPress.Security.NonceVerification
-			$evf_admin_approval_entry_enable   = get_option( 'everest_forms_admin_approval_entries_enable', 'no' );
-			$evf_admin_form_id                 = isset( $_GET['form_id'] ) ? absint( $_GET['form_id'] ) : 0; // phpcs:ignore WordPress.Security.NonceVerification
-			$evf_admin_entry_id                = isset( $_GET['entry_id'] ) ? absint( $_GET['entry_id'] ) : 0; // phpcs:ignore WordPress.Security.NonceVerification
-			$evf_entry_redirect_url            = admin_url() . 'admin.php?page=evf-entries&form_id=' . $evf_admin_form_id . '&view-entry=' . $evf_admin_entry_id;
-			$evf_admin_entry_saved_token       = get_option( 'everest_forms_admin_entry_approval_token', array() );
-			$site_name                         = get_option( 'blogname' );
+		global $wpdb;
 
-			if ( 'yes' === $evf_admin_approval_entry_enable ) {
+		$evf_admin_denial_entry_token_raw = sanitize_text_field( wp_unslash( $_GET['evf_admin_denial_entry_token'] ) ); // phpcs:ignore WordPress.Security.NonceVerification
+		$evf_admin_approval_entry_enable  = get_option( 'everest_forms_admin_approval_entries_enable', 'no' );
+		$evf_admin_form_id                = isset( $_GET['form_id'] ) ? absint( $_GET['form_id'] ) : 0; // phpcs:ignore WordPress.Security.NonceVerification
+		$evf_admin_entry_id               = isset( $_GET['entry_id'] ) ? absint( $_GET['entry_id'] ) : 0; // phpcs:ignore WordPress.Security.NonceVerification
+		$evf_entry_redirect_url           = admin_url() . 'admin.php?page=evf-entries&form_id=' . $evf_admin_form_id . '&view-entry=' . $evf_admin_entry_id;
+		$evf_admin_entry_saved_token      = get_option( 'everest_forms_admin_entry_approval_token', array() );
+		$site_name                        = get_option( 'blogname' );
 
-				$evf_admin_denial_entry_token = isset( $_GET['evf_admin_denial_entry_token'] ) ? sanitize_text_field( wp_unslash( $_GET['evf_admin_denial_entry_token'] ) ) : ''; // phpcs:ignore WordPress.Security.NonceVerification
-				if ( in_array( $evf_admin_approve_entry_token_raw, $evf_admin_entry_saved_token ) ) {
-					$evf_admin_approval_denied = $wpdb->query( $wpdb->prepare( "UPDATE {$wpdb->prefix}evf_entries SET status = %s WHERE entry_id = %s ", 'denied', $evf_admin_entry_id ) );
-					$entry                     = evf_get_entry( $evf_admin_entry_id );
-					$entry_meta                = $entry->meta;
-					$entry_date                = $entry->date_created;
-					$first_name                = '';
-					$last_name                 = '';
-					$email                     = '';
-					$name                      = '';
+		if ( 'yes' !== $evf_admin_approval_entry_enable ) {
+			wp_die( esc_html__( 'Entry approval is not enabled for this site.', 'everest-forms' ), '', array( 'response' => 403 ) );
+		}
 
-					foreach ( $entry_meta as $key => $value ) {
-						if ( preg_match( '/^name/', $key ) ) {
-							$name = $value;
-						}
+		$evf_denial_key           = 'denial_token_' . $evf_admin_entry_id;
+		$evf_admin_expected_token = isset( $evf_admin_entry_saved_token[ $evf_denial_key ] ) ? $evf_admin_entry_saved_token[ $evf_denial_key ] : '';
 
-						if ( preg_match( '/^first_name_/', $key ) ) {
-							$first_name = $value;
-						}
+		// Fall back to the pre-existing shared approval token for deny links sent before entries got a separate denial token.
+		if ( '' === $evf_admin_expected_token ) {
+			$legacy_key               = 'approval_token_' . $evf_admin_entry_id;
+			$evf_admin_expected_token = isset( $evf_admin_entry_saved_token[ $legacy_key ] )
+				? $evf_admin_entry_saved_token[ $legacy_key ]
+				: '';
+		}
 
-						if ( preg_match( '/^last_name_/', $key ) ) {
-							$last_name = $value;
-						}
+		// Bind the token to the specific entry it was issued for instead of accepting any valid token in the option.
+		if ( '' === $evf_admin_expected_token || ! hash_equals( $evf_admin_expected_token, $evf_admin_denial_entry_token_raw ) ) {
+			wp_die( esc_html__( 'This denial link is invalid or has already been used.', 'everest-forms' ), '', array( 'response' => 403, 'back_link' => true ) );
+		}
 
-						if ( preg_match( '/^email/', $key ) ) {
-							$email = $value;
-						}
+		$evf_admin_approval_denied = $wpdb->query( $wpdb->prepare( "UPDATE {$wpdb->prefix}evf_entries SET status = %s WHERE entry_id = %d ", 'denied', $evf_admin_entry_id ) );
+		$entry                     = evf_get_entry( $evf_admin_entry_id );
+		$entry_meta                = $entry->meta;
+		$entry_date                = $entry->date_created;
+		$first_name                = '';
+		$last_name                 = '';
+		$email                     = '';
+		$name                      = '';
+		$subject                  = '';
+		$message                  = '';
 
-						if ( '' === $name ) {
-							if ( ! empty( $first_name ) && ! empty( $last_name ) ) {
-								$name = $first_name . ' ' . $last_name;
-							} elseif ( ! empty( $first_name ) ) {
-								$name = $first_name;
-							} else {
-								$name = $last_name;
-							}
-						}
+		foreach ( $entry_meta as $key => $value ) {
+			if ( preg_match( '/^name_/', $key ) ) {
+				$name = $value;
+			}
 
-						$subject = apply_filters( 'everest_forms_entry_submission_approval_subject', esc_html__( 'Entry Submission Denied', 'everest-forms' ) );
-						// translators: %s is the name of the user
-						$message = sprintf( __( 'Hey, %s', 'everest-forms' ), $name ) . '<br/>';
-						// translators: %s is the entry_date.
-						$message .= '<br/>' . sprintf( __( 'We’re sorry to inform you that your form entry submitted on %s has been denied.', 'everest-forms' ), $entry_date ) . '<br/>';
-						$message .= '<br/>' . __( 'Thank you for giving us your precious time.', 'everest-forms' ) . '<br/>';
-						// translators: %s is the site_name.
-						$message .= '<br/>' . sprintf( __( 'From %s', 'everest-forms' ), $site_name );
-						// translators: %s is the message.
-						$message = apply_filters( 'everest_forms_entry_denial_message', $message, $name, $entry_date, $site_name );
+			if ( preg_match( '/^first_name_/', $key ) ) {
+				$first_name = $value;
+			}
 
-					}
-					$email_obj = new EVF_Emails();
-					$email_obj->send( $email, $subject, $message );
-					wp_redirect( $evf_entry_redirect_url );
-				}
+			if ( preg_match( '/^last_name_/', $key ) ) {
+				$last_name = $value;
+			}
+
+			if ( preg_match( '/^email/', $key ) ) {
+				$email = $value;
 			}
 		}
+
+		if ( '' === $name ) {
+			if ( ! empty( $first_name ) && ! empty( $last_name ) ) {
+				$name = $first_name . ' ' . $last_name;
+			} elseif ( ! empty( $first_name ) ) {
+				$name = $first_name;
+			} else {
+				$name = $last_name;
+			}
+		}
+
+		$subject = apply_filters( 'everest_forms_entry_submission_denial_subject', EVF_Admin_Entries::get_entry_status_email_subject( 'denial' ) );
+		$message = apply_filters( 'everest_forms_entry_denial_message', EVF_Admin_Entries::get_entry_status_email_message( 'denial', $name, $entry_date, $site_name ), $name, $entry_date, $site_name );
+
+		if ( EVF_Admin_Entries::is_entry_status_email_enabled( 'denial' ) ) {
+			$email_obj = new EVF_Emails();
+			$email_obj->send( $email, $subject, $message );
+		}
+
+		// Invalidate both the approve and deny links for this entry now that it has been actioned.
+		unset( $evf_admin_entry_saved_token[ $evf_denial_key ], $evf_admin_entry_saved_token[ 'approval_token_' . $evf_admin_entry_id ] );
+		update_option( 'everest_forms_admin_entry_approval_token', $evf_admin_entry_saved_token );
+
+		wp_redirect( $evf_entry_redirect_url );
+		exit;
 	}
 
 	/**
@@ -2041,23 +2071,46 @@ class EVF_Form_Task {
 	 * @since 2.0.9
 	 */
 	public function evf_set_approval_status( $entry_id, $form_data ) {
-		$evf_admin_approval_token_list  = array();
 		$form_id                        = isset( $form_data['id'] ) ? $form_id['id'] : '';
 		$evf_admin_entry_enable         = get_option( 'everest_forms_admin_approval_entries_enable', 'no' );
 		$evf_admin_entry_approval_token = get_option( 'everest_forms_admin_entry_approval_token', array() );
 		$evf_approval_key               = 'approval_token_' . $entry_id;
+		$evf_denial_key                 = 'denial_token_' . $entry_id;
 
 		// Checks if admin approval entry is enabled.
-		if ( ! isset( $evf_admin_entry_enable ) ) {
+		if ( 'yes' !== $evf_admin_entry_enable ) {
 			return;
-		} else {
-			$token              = evf_get_random_string( 20 );
-			$evf_approval_token = array(
-				$evf_approval_key => $token,
-			);
-			$evf_new_token      = array_merge( $evf_admin_entry_approval_token, $evf_approval_token );
-			update_option( 'everest_forms_admin_entry_approval_token', $evf_new_token );
 		}
+
+		// Separate tokens for approve and deny so one link can't be used to perform the other action.
+		$evf_new_token = array_merge(
+			$evf_admin_entry_approval_token,
+			array(
+				$evf_approval_key => evf_get_random_string( 20 ),
+				$evf_denial_key   => evf_get_random_string( 20 ),
+			)
+		);
+		update_option( 'everest_forms_admin_entry_approval_token', $evf_new_token );
+	}
+
+	/**
+	 * Removes the approve/deny tokens for an entry once it no longer exists, so the
+	 * option doesn't accumulate orphaned tokens for deleted entries.
+	 *
+	 * @param int $form_id  Form ID.
+	 * @param int $entry_id Entry ID.
+	 *
+	 * @since 3.6.0
+	 */
+	public function evf_cleanup_approval_tokens( $form_id, $entry_id ) {
+		$evf_admin_entry_approval_token = get_option( 'everest_forms_admin_entry_approval_token', array() );
+
+		if ( empty( $evf_admin_entry_approval_token ) ) {
+			return;
+		}
+
+		unset( $evf_admin_entry_approval_token[ 'approval_token_' . $entry_id ], $evf_admin_entry_approval_token[ 'denial_token_' . $entry_id ] );
+		update_option( 'everest_forms_admin_entry_approval_token', $evf_admin_entry_approval_token );
 	}
 
 	/**
