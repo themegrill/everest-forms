@@ -19,7 +19,15 @@ class EVF_Smart_Tags_Security_Test extends WP_UnitTestCase {
 	protected $post_id;
 
 	/**
-	 * Minimal trusted form definition.
+	 * Post ID of the real `everest_form` used to drive EVF_Form_Task::do_task().
+	 *
+	 * @var int
+	 */
+	protected $form_id;
+
+	/**
+	 * Minimal trusted form definition, kept in sync with the form's own
+	 * post_content via save_form_data().
 	 *
 	 * @var array
 	 */
@@ -35,8 +43,16 @@ class EVF_Smart_Tags_Security_Test extends WP_UnitTestCase {
 		update_post_meta( $this->post_id, 'mailchimp_api_key', 'mc-LIVE-SECRET-VALUE' );
 		update_post_meta( $this->post_id, '_protected_secret', 'should-never-leak' );
 
+		$this->form_id = $this->factory->post->create(
+			array(
+				'post_type'   => 'everest_form',
+				'post_status' => 'publish',
+				'post_title'  => 'Smart Tag Security Test Form',
+			)
+		);
+
 		$this->form_data = array(
-			'id'          => 999999,
+			'id'          => $this->form_id,
 			'form_fields' => array(
 				'1' => array(
 					'id'            => '1',
@@ -46,13 +62,19 @@ class EVF_Smart_Tags_Security_Test extends WP_UnitTestCase {
 					'default_value' => 'organic',
 				),
 				'2' => array(
-					'id'    => '2',
-					'type'  => 'text',
-					'label' => 'Message',
+					'id'       => '2',
+					'type'     => 'text',
+					'label'    => 'Message',
+					'meta-key' => 'message',
 				),
 			),
-			'settings'    => array(),
+			'settings'    => array(
+				'form_title'           => 'Smart Tag Security Test Form',
+				'ajax_form_submission' => '0',
+			),
 		);
+
+		$this->save_form_data();
 	}
 
 	/**
@@ -60,63 +82,117 @@ class EVF_Smart_Tags_Security_Test extends WP_UnitTestCase {
 	 */
 	public function tearDown() {
 		wp_delete_post( $this->post_id, true );
+		wp_delete_post( $this->form_id, true );
+		$_POST = array();
 		parent::tearDown();
 	}
 
 	/**
-	 * Replicates the (fixed) hidden-field resolution loop from
-	 * EVF_Form_Task::do_task() / entry_save(): smart tags are resolved
-	 * from the field's own configured default_value, never from the
-	 * submitted value.
+	 * Persists $this->form_data as the form's post_content, exactly as the
+	 * builder would save it.
 	 */
-	protected function resolve_hidden_fields( $submitted_fields ) {
-		foreach ( $submitted_fields as $key => $value ) {
-			if ( 'hidden' !== $value['type'] ) {
-				continue;
-			}
+	protected function save_form_data() {
+		wp_update_post(
+			array(
+				'ID'           => $this->form_id,
+				'post_content' => evf_encode( $this->form_data ),
+			)
+		);
+	}
 
-			$default_value = isset( $this->form_data['form_fields'][ $key ]['default_value'] )
-				? $this->form_data['form_fields'][ $key ]['default_value']
-				: '';
+	/**
+	 * Submits the form through the real production entry point --
+	 * EVF_Form_Task::do_task(), which on success also calls entry_save() --
+	 * using the process-wide evf()->task singleton so that field-type
+	 * validate()/format() hooks (which write to evf()->task->form_fields,
+	 * not to an arbitrary instance) land on the same object this test reads
+	 * back from.
+	 *
+	 * @param array $submitted_fields Field id => submitted value.
+	 * @return EVF_Form_Task
+	 */
+	protected function submit( $submitted_fields ) {
+		$_POST[ '_wpnonce' . $this->form_id ] = wp_create_nonce( 'everest-forms_process_submit' );
 
-			if ( is_string( $default_value ) && '' !== $default_value && strpos( $default_value, '{' ) !== false ) {
-				$submitted_fields[ $key ]['value'] = apply_filters( 'everest_forms_process_smart_tags', $default_value, $this->form_data, $submitted_fields );
-			}
-		}
+		$task = evf()->task;
+		$task->do_task(
+			array(
+				'id'          => $this->form_id,
+				'form_fields' => $submitted_fields,
+			)
+		);
 
-		return $submitted_fields;
+		return $task;
+	}
+
+	/**
+	 * Reads a persisted entry meta value back from the database, the way
+	 * entry_save() actually stored it.
+	 *
+	 * @param int    $entry_id Entry id.
+	 * @param string $meta_key Meta key.
+	 * @return string|null
+	 */
+	protected function get_entry_meta_value( $entry_id, $meta_key ) {
+		global $wpdb;
+
+		$value = $wpdb->get_var(
+			$wpdb->prepare(
+				"SELECT meta_value FROM {$wpdb->prefix}evf_entrymeta WHERE entry_id = %d AND meta_key = %s", // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+				$entry_id,
+				$meta_key
+			)
+		);
+
+		return null === $value ? null : maybe_unserialize( $value );
 	}
 
 	/**
 	 * An attacker POSTing a smart tag directly into a Hidden field's value
 	 * must never have it resolved -- only the field's own trusted
-	 * default_value may ever reach the smart tag parser.
+	 * default_value may ever reach the smart tag parser. Exercises the real
+	 * do_task() -> entry_save() path, not a copy of its logic.
 	 */
 	public function test_hidden_field_post_payload_is_not_resolved() {
-		$submitted               = $this->form_data['form_fields'];
-		$submitted['1']['value'] = '{post_meta key=mailchimp_api_key}';
-		$submitted['2']['value'] = 'hello';
+		$task = $this->submit(
+			array(
+				'1' => '{post_meta key=mailchimp_api_key}',
+				'2' => 'hello',
+			)
+		);
 
-		$resolved = $this->resolve_hidden_fields( $submitted );
+		$this->assertEmpty( $task->errors, 'Submission unexpectedly failed validation: ' . wp_json_encode( $task->errors ) );
+		$this->assertSame( '{post_meta key=mailchimp_api_key}', $task->form_fields['1']['value'] );
+		$this->assertStringNotContainsString( 'mc-LIVE-SECRET-VALUE', $task->form_fields['1']['value'] );
 
-		$this->assertSame( '{post_meta key=mailchimp_api_key}', $resolved['1']['value'] );
-		$this->assertStringNotContainsString( 'mc-LIVE-SECRET-VALUE', $resolved['1']['value'] );
+		// entry_save() persisted the same, unresolved value -- not the secret.
+		$this->assertGreaterThan( 0, $task->entry_id );
+		$stored = $this->get_entry_meta_value( $task->entry_id, 'utm_source' );
+		$this->assertSame( '{post_meta key=mailchimp_api_key}', $stored );
 	}
 
 	/**
 	 * A hidden field whose default_value legitimately contains a smart tag
-	 * (e.g. referencing another submitted field) must still resolve.
+	 * (e.g. referencing another submitted field) must still resolve, end to
+	 * end through do_task() -> entry_save().
 	 */
 	public function test_hidden_field_trusted_default_value_still_resolves() {
 		$this->form_data['form_fields']['1']['default_value'] = 'ref: {field_id="2"}';
+		$this->save_form_data();
 
-		$submitted               = $this->form_data['form_fields'];
-		$submitted['1']['value'] = 'ref: {field_id="2"}';
-		$submitted['2']['value'] = 'user typed this';
+		$task = $this->submit(
+			array(
+				'1' => 'ref: {field_id="2"}', // as rendered/submitted verbatim.
+				'2' => 'user typed this',
+			)
+		);
 
-		$resolved = $this->resolve_hidden_fields( $submitted );
+		$this->assertEmpty( $task->errors, 'Submission unexpectedly failed validation: ' . wp_json_encode( $task->errors ) );
+		$this->assertSame( 'ref: user typed this', $task->form_fields['1']['value'] );
 
-		$this->assertSame( 'ref: user typed this', $resolved['1']['value'] );
+		$this->assertGreaterThan( 0, $task->entry_id );
+		$stored = $this->get_entry_meta_value( $task->entry_id, 'utm_source' );
+		$this->assertSame( 'ref: user typed this', $stored );
 	}
 
 	/**
