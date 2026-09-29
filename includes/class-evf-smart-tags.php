@@ -215,139 +215,16 @@ class EVF_Smart_Tags {
 	 * @return string
 	 */
 	public function process( $content, $form_data, $fields = '', $entry_id = '' ) {
-		// Field smart tags (settings, etc).
-		preg_match_all( '/\{field_id="(.+?)"\}/', $content, $ids );
-
-		// We can only process field smart tags if we have $fields.
-		if ( ! empty( $ids[1] ) && ! empty( $fields ) ) {
-
-			foreach ( $ids[1] as $key => $field_id ) {
-				$mixed_field_id = explode( '_', $field_id );
-				$uploads        = wp_upload_dir();
-
-				if ( count( $mixed_field_id ) > 1 && 'fullname' !== $field_id && 'email' !== $field_id && 'subject' !== $field_id && 'message' !== $field_id ) {
-					$value = isset( $fields[ $mixed_field_id[1] ]['value'] ) && ! empty( $fields[ $mixed_field_id[1] ]['value'] ) ? evf_sanitize_textarea_field( $fields[ $mixed_field_id[1] ]['value'] ) : '';
-				} else {
-					$value = isset( $fields[ $field_id ]['value'] ) && ! empty( $fields[ $field_id ]['value'] ) ? evf_sanitize_textarea_field( $fields[ $field_id ]['value'] ) : '';
-				}
-
-				$value = apply_filters( 'everest_forms_smart_tags_value', $value, $field_id, $fields, $form_data );
-
-				if ( count( $mixed_field_id ) > 1 && ! empty( $fields[ $mixed_field_id[1] ] ) ) {
-					// Properly display signature field in smart tag.
-					if ( 'signature' === $fields[ $mixed_field_id[1] ]['type'] ) {
-						if ( ! is_array( $value ) && false !== strpos( $value, $uploads['basedir'] ) ) {
-							$value = trailingslashit( content_url() ) . str_replace( str_replace( 'uploads', '', $uploads['basedir'] ), '', $value );
-						}
-
-						if ( ! empty( $value ) ) {
-							$styles = array(
-								'width'      => '150px',
-								'height'     => '80px',
-								'max-width'  => '100px',
-								'max-height' => '200px',
-							);
-
-							$styles = apply_filters( 'everest_forms_export_signature_style', $styles, $fields[ $mixed_field_id[1] ] );
-
-							// Convert styles array to inline style string
-							$style_string = '';
-							foreach ( $styles as $key => $val ) {
-								$style_string .= $key . ':' . $val . ';';
-							}
-
-							$value = sprintf(
-								'<img src="%s" style="%s"/>',
-								esc_url( $value ),
-								esc_attr( $style_string )
-							);
-						}
-					}
-
-					// Properly display Radio field in smart tag.
-					if ( isset( $value['image'] ) && 'radio' === $fields[ $mixed_field_id[1] ]['type'] ) {
-						if ( ! is_array( $value ) && false !== strpos( $value['image'], $uploads['basedir'] ) ) {
-							$value = trailingslashit( content_url() ) . str_replace( str_replace( 'uploads', '', $uploads['basedir'] ), '', $value['image'] );
-						}
-
-						if ( ! empty( $value ) ) {
-							$value = sprintf(
-								"\n" . '<img src="%s" style="width:150px;height:80px;max-height:200px;max-width:100px;"/>' . "\n" . '%s',
-								$value['image'],
-								$value['label']
-							);
-						}
-					}
-
-					// Properly display Checkboxes field in smart tag.
-					if ( isset( $value['images'] ) && ( 'checkbox' === $fields[ $mixed_field_id[1] ]['type'] ) ) {
-						$checkbox_images = '';
-						foreach ( $value['images'] as $image_key => $image_value ) {
-							if ( ! is_array( $image_value ) && false !== strpos( $image_value, $uploads['basedir'] ) ) {
-								$value = trailingslashit( content_url() ) . str_replace( str_replace( 'uploads', '', $uploads['basedir'] ), '', $image_value );
-							}
-
-							if ( ! empty( $value ) ) {
-								$checkbox_images .= sprintf(
-									"\n" . '<img src="%s" style="width:150px;height:80px;max-height:200px;max-width:100px;"/>' . "\n" . '%s',
-									$image_value,
-									$value['label'][ $image_key ]
-								);
-							}
-						}
-						$value = $checkbox_images;
-					}
-
-					// Properly display Files and Image Upload field in smart tag.
-					if ( 'image-upload' === $fields[ $mixed_field_id[1] ]['type'] || 'file-upload' === $fields[ $mixed_field_id[1] ]['type'] ) {
-						$files = '';
-
-						if ( ! empty( $fields[ $mixed_field_id[1] ]['value_raw'] ) ) {
-							foreach ( $fields[ $mixed_field_id[1] ]['value_raw'] as $files_key => $files_value ) {
-								if ( ! is_array( $files_value['value'] ) && false !== strpos( $files_value['value'], $uploads['basedir'] ) ) {
-									$value = trailingslashit( content_url() ) . str_replace( str_replace( 'uploads', '', $uploads['basedir'] ), '', $files_value['value'] );
-								}
-
-								if ( ! empty( $value ) ) {
-									$files .= sprintf(
-										apply_filters(
-											'everest_forms_smart_tags_file_upload',
-											'<a href="%s">%s</a>' . "\n",
-											$files_value
-										),
-										esc_url( $files_value['value'] ),
-										esc_html( $files_value['name'] )
-									);
-								}
-							}
-							$value = $files;
-						}
-					}
-				}
-
-				if ( ! is_array( $value ) ) {
-					$content = str_replace( '{field_id="' . $field_id . '"}', $value, $content );
-				} else {
-					if ( isset( $value['type'], $value['label'] ) ) {
-						if ( in_array( $value['type'], array( 'radio', 'payment-multiple' ), true ) ) {
-							$value = $value['label'];
-						} elseif ( in_array( $value['type'], array( 'checkbox', 'payment-checkbox' ), true ) ) {
-							$value = implode( ',', $value['label'] );
-
-						}
-					} elseif ( isset( $value['number_of_rating'], $value['value'] ) ) {
-						$value = (string) $value['value'] . '/' . (string) $value['number_of_rating'];
-					} elseif ( isset( $value['type'], $value['country_code'] ) && 'country' === $value['type'] ) {
-						$value = $value['country_code'];
-					} else {
-						$value = $value[0];
-					}
-
-					$content = str_replace( '{field_id="' . $field_id . '"}', $value, $content );
-				}
-			}
-		}
-
+		/**
+		 * Other smart tags (post_meta, user_meta, admin_email, etc.) are resolved
+		 * first, against the original admin-authored $content, and {field_id="..."}
+		 * placeholders are substituted last. If field values were merged in first,
+		 * a submitter typing tag syntax (e.g. {post_meta key=...}) into an ordinary
+		 * field referenced by a {field_id} smart tag would get it re-resolved by
+		 * the pass below, letting an unauthenticated submitter read arbitrary
+		 * server-side data back through any notification/confirmation that embeds
+		 * that field. See https://github.com/themegrill/everest-forms/pull/1667.
+		 */
 		// Other Smart tags.
 		preg_match_all( '/\{(.+?)\}/', $content, $other_tags );
 		if ( ! empty( $other_tags[1] ) ) {
@@ -577,6 +454,139 @@ class EVF_Smart_Tags {
 					default:
 						$content = apply_filters( 'everest_forms_custom_smart_tag', $content, $other_tag, $entry_id );
 						break;
+				}
+			}
+		}
+
+		// Field smart tags (settings, etc).
+		preg_match_all( '/\{field_id="(.+?)"\}/', $content, $ids );
+
+		// We can only process field smart tags if we have $fields.
+		if ( ! empty( $ids[1] ) && ! empty( $fields ) ) {
+
+			foreach ( $ids[1] as $key => $field_id ) {
+				$mixed_field_id = explode( '_', $field_id );
+				$uploads        = wp_upload_dir();
+
+				if ( count( $mixed_field_id ) > 1 && 'fullname' !== $field_id && 'email' !== $field_id && 'subject' !== $field_id && 'message' !== $field_id ) {
+					$value = isset( $fields[ $mixed_field_id[1] ]['value'] ) && ! empty( $fields[ $mixed_field_id[1] ]['value'] ) ? evf_sanitize_textarea_field( $fields[ $mixed_field_id[1] ]['value'] ) : '';
+				} else {
+					$value = isset( $fields[ $field_id ]['value'] ) && ! empty( $fields[ $field_id ]['value'] ) ? evf_sanitize_textarea_field( $fields[ $field_id ]['value'] ) : '';
+				}
+
+				$value = apply_filters( 'everest_forms_smart_tags_value', $value, $field_id, $fields, $form_data );
+
+				if ( count( $mixed_field_id ) > 1 && ! empty( $fields[ $mixed_field_id[1] ] ) ) {
+					// Properly display signature field in smart tag.
+					if ( 'signature' === $fields[ $mixed_field_id[1] ]['type'] ) {
+						if ( ! is_array( $value ) && false !== strpos( $value, $uploads['basedir'] ) ) {
+							$value = trailingslashit( content_url() ) . str_replace( str_replace( 'uploads', '', $uploads['basedir'] ), '', $value );
+						}
+
+						if ( ! empty( $value ) ) {
+							$styles = array(
+								'width'      => '150px',
+								'height'     => '80px',
+								'max-width'  => '100px',
+								'max-height' => '200px',
+							);
+
+							$styles = apply_filters( 'everest_forms_export_signature_style', $styles, $fields[ $mixed_field_id[1] ] );
+
+							// Convert styles array to inline style string
+							$style_string = '';
+							foreach ( $styles as $key => $val ) {
+								$style_string .= $key . ':' . $val . ';';
+							}
+
+							$value = sprintf(
+								'<img src="%s" style="%s"/>',
+								esc_url( $value ),
+								esc_attr( $style_string )
+							);
+						}
+					}
+
+					// Properly display Radio field in smart tag.
+					if ( isset( $value['image'] ) && 'radio' === $fields[ $mixed_field_id[1] ]['type'] ) {
+						if ( ! is_array( $value ) && false !== strpos( $value['image'], $uploads['basedir'] ) ) {
+							$value = trailingslashit( content_url() ) . str_replace( str_replace( 'uploads', '', $uploads['basedir'] ), '', $value['image'] );
+						}
+
+						if ( ! empty( $value ) ) {
+							$value = sprintf(
+								"\n" . '<img src="%s" style="width:150px;height:80px;max-height:200px;max-width:100px;"/>' . "\n" . '%s',
+								$value['image'],
+								$value['label']
+							);
+						}
+					}
+
+					// Properly display Checkboxes field in smart tag.
+					if ( isset( $value['images'] ) && ( 'checkbox' === $fields[ $mixed_field_id[1] ]['type'] ) ) {
+						$checkbox_images = '';
+						foreach ( $value['images'] as $image_key => $image_value ) {
+							if ( ! is_array( $image_value ) && false !== strpos( $image_value, $uploads['basedir'] ) ) {
+								$value = trailingslashit( content_url() ) . str_replace( str_replace( 'uploads', '', $uploads['basedir'] ), '', $image_value );
+							}
+
+							if ( ! empty( $value ) ) {
+								$checkbox_images .= sprintf(
+									"\n" . '<img src="%s" style="width:150px;height:80px;max-height:200px;max-width:100px;"/>' . "\n" . '%s',
+									$image_value,
+									$value['label'][ $image_key ]
+								);
+							}
+						}
+						$value = $checkbox_images;
+					}
+
+					// Properly display Files and Image Upload field in smart tag.
+					if ( 'image-upload' === $fields[ $mixed_field_id[1] ]['type'] || 'file-upload' === $fields[ $mixed_field_id[1] ]['type'] ) {
+						$files = '';
+
+						if ( ! empty( $fields[ $mixed_field_id[1] ]['value_raw'] ) ) {
+							foreach ( $fields[ $mixed_field_id[1] ]['value_raw'] as $files_key => $files_value ) {
+								if ( ! is_array( $files_value['value'] ) && false !== strpos( $files_value['value'], $uploads['basedir'] ) ) {
+									$value = trailingslashit( content_url() ) . str_replace( str_replace( 'uploads', '', $uploads['basedir'] ), '', $files_value['value'] );
+								}
+
+								if ( ! empty( $value ) ) {
+									$files .= sprintf(
+										apply_filters(
+											'everest_forms_smart_tags_file_upload',
+											'<a href="%s">%s</a>' . "\n",
+											$files_value
+										),
+										esc_url( $files_value['value'] ),
+										esc_html( $files_value['name'] )
+									);
+								}
+							}
+							$value = $files;
+						}
+					}
+				}
+
+				if ( ! is_array( $value ) ) {
+					$content = str_replace( '{field_id="' . $field_id . '"}', $value, $content );
+				} else {
+					if ( isset( $value['type'], $value['label'] ) ) {
+						if ( in_array( $value['type'], array( 'radio', 'payment-multiple' ), true ) ) {
+							$value = $value['label'];
+						} elseif ( in_array( $value['type'], array( 'checkbox', 'payment-checkbox' ), true ) ) {
+							$value = implode( ',', $value['label'] );
+
+						}
+					} elseif ( isset( $value['number_of_rating'], $value['value'] ) ) {
+						$value = (string) $value['value'] . '/' . (string) $value['number_of_rating'];
+					} elseif ( isset( $value['type'], $value['country_code'] ) && 'country' === $value['type'] ) {
+						$value = $value['country_code'];
+					} else {
+						$value = $value[0];
+					}
+
+					$content = str_replace( '{field_id="' . $field_id . '"}', $value, $content );
 				}
 			}
 		}

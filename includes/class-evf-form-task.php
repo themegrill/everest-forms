@@ -722,13 +722,24 @@ class EVF_Form_Task {
 			$logger->notice( sprintf( 'Everest Form Process After: %s', evf_print_r( $this->form_fields, true ) ) );
 
 			/**
-			 *  Apply smart tags to form fields values.
+			 * Apply smart tags to form fields values.
+			 *
+			 * Resolved strictly from the field's own admin-configured default_value
+			 * (the trusted form definition), never from the submitted value, so a
+			 * crafted request body cannot inject arbitrary smart tags such as
+			 * {post_meta key=...}. See https://github.com/themegrill/everest-forms/pull/1667.
 			 *
 			 * @since 3.2.3
 			 */
 			foreach ( $this->form_fields as $key => $value ) {
-				if ( 'hidden' === $value['type'] && ! empty( $value['value'] ) && is_string( $value['value'] ) && strpos( $value['value'], '{' ) !== false ) {
-					$this->form_fields[ $key ]['value'] = apply_filters( 'everest_forms_process_smart_tags', $value['value'], $this->form_data, $this->form_fields );
+				if ( 'hidden' !== $value['type'] ) {
+					continue;
+				}
+
+				$default_value = isset( $this->form_data['form_fields'][ $key ]['default_value'] ) ? $this->form_data['form_fields'][ $key ]['default_value'] : '';
+
+				if ( is_string( $default_value ) && '' !== $default_value && strpos( $default_value, '{' ) !== false ) {
+					$this->form_fields[ $key ]['value'] = apply_filters( 'everest_forms_process_smart_tags', $default_value, $this->form_data, $this->form_fields );
 				}
 			}
 
@@ -1550,7 +1561,7 @@ class EVF_Form_Task {
 
 		// Create meta data.
 		if ( $entry_id ) {
-			foreach ( $fields as $field ) {
+			foreach ( $fields as $field_key => $field ) {
 				$field = apply_filters( 'everest_forms_entry_save_fields', $field, $form_data, $entry_id );
 				// Add only whitelisted fields to entry meta.
 				if ( in_array( $field['type'], array( 'html', 'title' ), true ) ) {
@@ -1578,8 +1589,15 @@ class EVF_Form_Task {
 				}
 
 				if ( isset( $field['meta_key'], $field['value'] ) && '' !== $field['value'] ) {
-					if ( 'hidden' === $field['type'] && ! empty( $field['value'] ) && is_string( $field['value'] ) && strpos( $field['value'], '{' ) !== false ) {
-						$field['value'] = apply_filters( 'everest_forms_process_smart_tags', $field['value'], $form_data, $fields, $entry_id );
+					// Resolved strictly from the field's own admin-configured default_value
+					// (never the submitted value) -- see the matching fix in do_task().
+					if ( 'hidden' === $field['type'] ) {
+						$field_id      = isset( $field['id'] ) ? $field['id'] : $field_key;
+						$default_value = isset( $form_data['form_fields'][ $field_id ]['default_value'] ) ? $form_data['form_fields'][ $field_id ]['default_value'] : '';
+
+						if ( is_string( $default_value ) && '' !== $default_value && strpos( $default_value, '{' ) !== false ) {
+							$field['value'] = apply_filters( 'everest_forms_process_smart_tags', $default_value, $form_data, $fields, $entry_id );
+						}
 					}
 					$entry_metadata = array(
 						'entry_id'   => $entry_id,
