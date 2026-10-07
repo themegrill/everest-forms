@@ -4779,7 +4779,7 @@ function evf_sanitize_builder($post_data = array())
 		$name = sanitize_text_field( $data->name );
 		if ( preg_match( '/\<.*\>/', $data->value ) ) {
 			$value = wp_kses_post( $data->value );
-		} elseif ( 'settings[external_url]' === $data->name ) {
+		} elseif ( 'settings[external_url]' === $data->name || preg_match( '/\[webhook_url\]$/', $data->name ) ) {
 			$value = esc_url_raw( $data->value );
 		} elseif ( preg_match( '/evf_email_message/', $data->name ) || preg_match( '/telegram_message/', $data->name ) || preg_match( '/slack_message/', $data->name ) ) {
 			$value = wp_kses_post( $data->value );
