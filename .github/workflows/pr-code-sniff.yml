@@ -2,7 +2,7 @@ name: Run code sniff on PR
 on: pull_request
 jobs:
   test:
-    name: Code sniff (PHP 8.2 , WP Latest)
+    name: Code sniff (PHP 7.4 , WP Latest)
     timeout-minutes: 15
     runs-on: ubuntu-latest
     steps:
@@ -14,7 +14,7 @@ jobs:
       - name: Setup PHP
         uses: shivammathur/setup-php@v2
         with:
-          php-version: 8.2
+          php-version: 7.4
           tools: composer, cs2pr
 
       - name: Tool versions
