@@ -1715,8 +1715,10 @@ abstract class EVF_Form_Fields_Upload extends EVF_Form_Fields {
 				}
 
 				if ( preg_match( '/signature_/', $meta_key ) ) {
-					if ( file_exists( $meta_value ) ) {
-						$entry_files [] = $meta_value;
+					$resolved = $this->resolve_uploads_file_path( $meta_value );
+
+					if ( false !== $resolved && ! in_array( $resolved, $entry_files, true ) ) {
+						$entry_files[] = $resolved;
 					}
 				} else {
 					$files = explode( "\n", $meta_value );
@@ -1750,8 +1752,10 @@ abstract class EVF_Form_Fields_Upload extends EVF_Form_Fields {
 				}
 
 				if ( preg_match( '/signature_/', $meta_key ) ) {
-					if ( is_string( $meta_value ) && file_exists( $meta_value ) ) {
-						$entry_files[] = $meta_value;
+					$resolved = $this->resolve_uploads_file_path( $meta_value );
+
+					if ( false !== $resolved && ! in_array( $resolved, $entry_files, true ) ) {
+						$entry_files[] = $resolved;
 					}
 				} elseif ( isset( $meta_value['type'] ) && ( 'file-upload' === $meta_value['type'] && ! empty( $meta_value['value_raw'] ) || 'image-upload' === $meta_value['type'] && isset( $meta_value['value_raw'] ) ) ) {
 					foreach ( $meta_value['value_raw'] as $file_data ) {
@@ -1788,7 +1792,6 @@ abstract class EVF_Form_Fields_Upload extends EVF_Form_Fields {
 		$file_url        = esc_url_raw( $file_url );
 		$upload_dir      = wp_get_upload_dir();
 		$uploads_baseurl = trailingslashit( $upload_dir['baseurl'] );
-		$uploads_basedir = wp_normalize_path( trailingslashit( $upload_dir['basedir'] ) );
 
 		if ( 0 !== strpos( $file_url, $uploads_baseurl ) ) {
 			return false;
@@ -1802,16 +1805,35 @@ abstract class EVF_Form_Fields_Upload extends EVF_Form_Fields {
 		}
 
 		$relative_path = ltrim( substr( $path, strlen( $base_path ) ), '/' );
-		$candidate     = wp_normalize_path( $uploads_basedir . $relative_path );
-		$resolved_path = realpath( $candidate );
 
-		if ( false === $resolved_path ) {
+		return $this->resolve_uploads_file_path( trailingslashit( $upload_dir['basedir'] ) . $relative_path );
+	}
+
+	/**
+	 * Resolve a local path to a real file inside the uploads directory.
+	 *
+	 * @since 3.6.4
+	 *
+	 * @param string $file_path File path to resolve.
+	 * @return string|false Canonical file path, or false when it is not a regular file inside uploads.
+	 */
+	protected function resolve_uploads_file_path( $file_path ) {
+		if ( empty( $file_path ) || ! is_string( $file_path ) || false !== strpos( $file_path, "\0" ) ) {
 			return false;
 		}
 
-		$resolved_path = wp_normalize_path( $resolved_path );
+		$upload_dir      = wp_get_upload_dir();
+		$uploads_basedir = realpath( $upload_dir['basedir'] );
+		$resolved_path   = realpath( $file_path );
 
-		if ( 0 !== strpos( $resolved_path, $uploads_basedir ) || ! is_file( $resolved_path ) ) {
+		if ( false === $uploads_basedir || false === $resolved_path || ! is_file( $resolved_path ) ) {
+			return false;
+		}
+
+		$uploads_basedir = trailingslashit( wp_normalize_path( $uploads_basedir ) );
+		$resolved_path   = wp_normalize_path( $resolved_path );
+
+		if ( 0 !== strpos( $resolved_path, $uploads_basedir ) ) {
 			return false;
 		}
 
