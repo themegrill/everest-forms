@@ -1715,7 +1715,7 @@ abstract class EVF_Form_Fields_Upload extends EVF_Form_Fields {
 				}
 
 				if ( preg_match( '/signature_/', $meta_key ) ) {
-					$resolved = $this->resolve_uploads_file_path( $meta_value );
+					$resolved = $this->resolve_uploads_file_path( $meta_value, 'everest_forms_uploads/' . absint( $get_entry->form_id ) . '/signature' );
 
 					if ( false !== $resolved && ! in_array( $resolved, $entry_files, true ) ) {
 						$entry_files[] = $resolved;
@@ -1751,13 +1751,7 @@ abstract class EVF_Form_Fields_Upload extends EVF_Form_Fields {
 					continue;
 				}
 
-				if ( preg_match( '/signature_/', $meta_key ) ) {
-					$resolved = $this->resolve_uploads_file_path( $meta_value );
-
-					if ( false !== $resolved && ! in_array( $resolved, $entry_files, true ) ) {
-						$entry_files[] = $resolved;
-					}
-				} elseif ( isset( $meta_value['type'] ) && ( 'file-upload' === $meta_value['type'] && ! empty( $meta_value['value_raw'] ) || 'image-upload' === $meta_value['type'] && isset( $meta_value['value_raw'] ) ) ) {
+				if ( isset( $meta_value['type'] ) && ( ( 'file-upload' === $meta_value['type'] && ! empty( $meta_value['value_raw'] ) ) || ( 'image-upload' === $meta_value['type'] && isset( $meta_value['value_raw'] ) ) ) ) {
 					foreach ( $meta_value['value_raw'] as $file_data ) {
 						$file_url = isset( $file_data['value'] ) && is_string( $file_data['value'] ) ? $file_data['value'] : '';
 						$resolved = $this->resolve_uploads_file_from_url( $file_url );
@@ -1815,15 +1809,16 @@ abstract class EVF_Form_Fields_Upload extends EVF_Form_Fields {
 	 * @since 3.6.4
 	 *
 	 * @param string $file_path File path to resolve.
-	 * @return string|false Canonical file path, or false when it is not a regular file inside uploads.
+	 * @param string $sub_dir   Optional uploads subdirectory the file must be inside.
+	 * @return string|false Canonical file path, or false when it is not a regular file inside the directory.
 	 */
-	protected function resolve_uploads_file_path( $file_path ) {
+	protected function resolve_uploads_file_path( $file_path, $sub_dir = '' ) {
 		if ( empty( $file_path ) || ! is_string( $file_path ) || false !== strpos( $file_path, "\0" ) ) {
 			return false;
 		}
 
 		$upload_dir      = wp_get_upload_dir();
-		$uploads_basedir = realpath( $upload_dir['basedir'] );
+		$uploads_basedir = realpath( trailingslashit( $upload_dir['basedir'] ) . $sub_dir );
 		$resolved_path   = realpath( $file_path );
 
 		if ( false === $uploads_basedir || false === $resolved_path || ! is_file( $resolved_path ) ) {

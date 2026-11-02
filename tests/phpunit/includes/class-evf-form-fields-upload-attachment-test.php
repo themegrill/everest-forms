@@ -118,10 +118,11 @@ class EVF_Form_Fields_Upload_Attachment_Test extends WP_UnitTestCase {
 	/**
 	 * Store an entry whose fields hold the given meta, and return its ID.
 	 *
-	 * @param array $meta Meta key to value map.
+	 * @param int   $form_id Form ID.
+	 * @param array $meta    Meta key to value map.
 	 * @return int
 	 */
-	protected function create_entry( $meta ) {
+	protected function create_entry( $form_id, $meta ) {
 		global $wpdb;
 
 		$fields = array();
@@ -136,7 +137,7 @@ class EVF_Form_Fields_Upload_Attachment_Test extends WP_UnitTestCase {
 		$wpdb->insert( // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery
 			$wpdb->prefix . 'evf_entries',
 			array(
-				'form_id'      => 1,
+				'form_id'      => $form_id,
 				'user_id'      => 0,
 				'user_device'  => '',
 				'referer'      => '',
@@ -222,18 +223,25 @@ class EVF_Form_Fields_Upload_Attachment_Test extends WP_UnitTestCase {
 	}
 
 	/**
-	 * Stored signature paths outside uploads are not attached; legitimate ones still are.
+	 * Only signature files from the entry's own form signature folder are attached.
 	 */
-	public function test_attach_entry_files_filters_signature_paths() {
-		$signature = $this->make_file( $this->uploads_dir . '/everest_forms_uploads/evf-attach-test/signature/signature_1.png' );
-		$upload    = $this->make_file( $this->uploads_dir . '/everest_forms_uploads/evf-attach-test/upload.png' );
-		$entry_id  = $this->create_entry(
+	public function test_attach_entry_files_only_attaches_own_form_signatures() {
+		$form_dir   = $this->uploads_dir . '/everest_forms_uploads/987654';
+		$signature  = $this->make_file( $form_dir . '/signature/signature_1.png' );
+		$upload     = $this->make_file( $form_dir . '/upload.png' );
+		$other_form = $this->make_file( $this->uploads_dir . '/everest_forms_uploads/987655/signature/signature_2.png' );
+		$other_file = $this->make_file( $this->uploads_dir . '/evf-attach-test-other.png' );
+		$entry_id   = $this->create_entry(
+			987654,
 			array(
-				'signature_valid'     => $signature,
-				'signature_outside'   => $this->outside_file,
-				'signature_traversal' => $this->uploads_dir . '/../../../../../../../../../..' . $this->outside_file,
-				'signature_config'    => __FILE__,
-				'file_upload_1'       => wp_get_upload_dir()['baseurl'] . '/everest_forms_uploads/evf-attach-test/upload.png',
+				'signature_valid'      => $signature,
+				'signature_upload'     => $upload,
+				'signature_other_form' => $other_form,
+				'signature_uploads'    => $other_file,
+				'signature_outside'    => $this->outside_file,
+				'signature_traversal'  => $form_dir . '/signature/../../../../../../../../../../..' . $this->outside_file,
+				'signature_php'        => __FILE__,
+				'file_upload_1'        => wp_get_upload_dir()['baseurl'] . '/everest_forms_uploads/987654/upload.png',
 			)
 		);
 
@@ -241,19 +249,25 @@ class EVF_Form_Fields_Upload_Attachment_Test extends WP_UnitTestCase {
 	}
 
 	/**
-	 * Submitted signature paths outside uploads are not attached when entries are disabled.
+	 * Submission fields keyed by field ID only attach uploaded files.
 	 */
-	public function test_attach_entry_files_upload_filters_signature_paths() {
-		$signature = $this->make_file( $this->uploads_dir . '/everest_forms_uploads/evf-attach-test/signature/signature_2.png' );
+	public function test_attach_entry_files_upload_ignores_signature_values() {
+		$upload = $this->make_file( $this->uploads_dir . '/everest_forms_uploads/987654/upload.png' );
 
 		$attachments = $this->field->attach_entry_files_upload(
 			array(
-				'signature_valid'   => $signature,
-				'signature_outside' => $this->outside_file,
-				'signature_config'  => __FILE__,
+				'sig'    => array(
+					'type'     => 'signature',
+					'meta_key' => 'signature_1', // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_key
+					'value'    => $this->outside_file,
+				),
+				'upload' => array(
+					'type'      => 'file-upload',
+					'value_raw' => array( array( 'value' => wp_get_upload_dir()['baseurl'] . '/everest_forms_uploads/987654/upload.png' ) ),
+				),
 			)
 		);
 
-		$this->assertSame( array( $signature ), $attachments );
+		$this->assertSame( array( $upload ), $attachments );
 	}
 }
