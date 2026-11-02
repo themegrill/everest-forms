@@ -68,7 +68,6 @@ class EVF_Blocks {
 			defined( 'SCRIPT_DEBUG' ) && SCRIPT_DEBUG ? filemtime( evf()->plugin_path() . '/assets/js/admin/shortcode-form-embed.js' ) : EVF_VERSION,
 			true
 		);
-		// Only expose what the form selector needs, never the raw form configuration.
 		$forms = array();
 		foreach ( (array) evf()->form->get_multiple( array( 'order' => 'DESC' ) ) as $form ) {
 			$forms[] = array(
