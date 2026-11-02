@@ -52,6 +52,9 @@ Building WordPress forms should be simple, powerful, and affordable; Everest For
 ##AI Form Builder
 Describe your form in plain words — Everest Forms AI will handle the fields, logic, and layout in seconds. Whether it's a freelance contract with a digital signature, a health check-in with range sliders, or a multi-step application — just type it and it's built. Choose from inspiration prompts or write your own, then refine the result with a follow-up prompt before publishing.
 
+## AI Abilities (MCP Ready)
+Built-in WordPress Abilities support lets AI assistants easily access and work with your forms and entries. Connect in a click with [Easy MCP AI](https://easymcpai.com/) or the official MCP Adapter.
+
 ## More Features in Free Version
 
 While other plugins charge premium prices for file uploads and advanced fields, Everest Forms includes file uploads, image uploads, and 35+ essential form fields absolutely free. No artificial limitations.
@@ -96,6 +99,7 @@ Get advanced capabilities like multi-step forms, conversational forms, AI-powere
 * Unlimited Forms
 * Powerful Form Builder
 * AI Form Builder
+* AI Abilities (MCP Ready)
 * 35+ Form Fields
 * Style Customizer
 * Entry Management
