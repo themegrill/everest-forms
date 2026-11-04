@@ -15,7 +15,7 @@ on:
 
 jobs:
   lint:
-    uses: themegrill/workflows/.github/workflows/lint.yml@master
+    uses: themegrill/workflows/.github/workflows/lint.yml@fix-install-fallbacks
     with:
       php-version: '7.4'
       fail-on-violations: false
