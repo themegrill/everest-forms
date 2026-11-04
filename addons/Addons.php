@@ -135,3 +135,5 @@ class Addons {
 		}
 	}
 }
+
+// Lint pilot test.
