@@ -1373,7 +1373,7 @@ class EVF_Shortcode_Form {
 
 		$form = evf()->form->get( $form_id );
 		// Check the form_data exist or not.
-		if ( ! $form ) {
+		if ( ! $form || ! in_array( $form->post_status, array( 'publish', 'inactive' ), true ) || ! self::can_output_custom_code( $form ) ) {
 			return;
 		}
 
@@ -1414,7 +1414,7 @@ class EVF_Shortcode_Form {
 		}
 
 		if ( isset( $settings['evf-enable-custom-js'] ) && evf_string_to_bool( $settings['evf-enable-custom-js'] ) ) {
-			$custom_js = isset( $settings['evf-custom-js'] ) ? wp_specialchars_decode( wp_kses_decode_entities( $settings['evf-custom-js'] ) ) : '';
+			$custom_js = isset( $settings['evf-custom-js'] ) ? wp_specialchars_decode( wp_kses_decode_entities( $settings['evf-custom-js'] ), ENT_QUOTES ) : '';
 			if ( ! empty( $custom_js ) ) {
 				$custom_js = sprintf(
 					'( function( $ ) {
@@ -1444,6 +1444,24 @@ class EVF_Shortcode_Form {
 				}
 			}
 		}
+	}
+
+	/**
+	 * Whether a form's custom CSS and JavaScript was saved by users allowed to add unfiltered HTML.
+	 *
+	 * @since 3.6.4
+	 *
+	 * @param WP_Post $form Form post.
+	 * @return bool
+	 */
+	private static function can_output_custom_code( $form ) {
+		if ( ! user_can( (int) $form->post_author, 'unfiltered_html' ) ) {
+			return false;
+		}
+
+		$last_editor = (int) get_post_meta( $form->ID, '_edit_last', true );
+
+		return ! $last_editor || user_can( $last_editor, 'unfiltered_html' );
 	}
 
 	/**
