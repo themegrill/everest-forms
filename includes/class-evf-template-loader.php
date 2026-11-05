@@ -244,7 +244,7 @@ class EVF_Template_Loader {
 	 * Hook in methods to enhance the form preview.
 	 */
 	public static function email_preview_init() {
-		if ( ! is_user_logged_in() || is_admin() ) {
+		if ( ! is_user_logged_in() || is_admin() || ! current_user_can( 'everest_forms_edit_form', self::$form_id ) ) {
 			return;
 		}
 

@@ -20,7 +20,7 @@ defined( 'ABSPATH' ) || exit;
 		</head>
 		<body <?php body_class(); ?> >
 			<?php
-			$connection_id = isset( $_GET['evf_email_preview'] ) ? $_GET['evf_email_preview'] : '';
+			$connection_id = isset( $_GET['evf_email_preview'] ) ? sanitize_text_field( wp_unslash( $_GET['evf_email_preview'] ) ) : ''; // phpcs:ignore WordPress.Security.NonceVerification
 			/**
 			 * Get email message from the specific email connection
 			 *
@@ -30,8 +30,14 @@ defined( 'ABSPATH' ) || exit;
 				$form_data = array();
 
 				if ( ! empty( $_GET['form_id'] ) ) { // phpcs:ignore WordPress.Security.NonceVerification
-					$connection_id = isset( $_GET['evf_email_preview'] ) ? $_GET['evf_email_preview'] : '';
-					$form_data     = evf()->form->get( absint( $_GET['form_id'] ), array( 'content_only' => true ) ); // phpcs:ignore WordPress.Security.NonceVerification
+					$connection_id = isset( $_GET['evf_email_preview'] ) ? sanitize_text_field( wp_unslash( $_GET['evf_email_preview'] ) ) : ''; // phpcs:ignore WordPress.Security.NonceVerification
+					$form_data     = evf()->form->get(
+						absint( $_GET['form_id'] ), // phpcs:ignore WordPress.Security.NonceVerification
+						array(
+							'content_only' => true,
+							'cap'          => 'everest_forms_edit_form',
+						)
+					);
 
 					if ( isset( $form_data['settings']['email'][ "$connection_id" ] ) && isset( $form_data['settings']['email'][ "$connection_id" ]['evf_email_message'] ) ) {
 						$email_preview_message = $form_data['settings']['email'][ "$connection_id" ]['evf_email_message'];
