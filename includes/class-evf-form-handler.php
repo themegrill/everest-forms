@@ -340,16 +340,6 @@ class EVF_Form_Handler {
 
 		$evf_form_data = evf()->form->get( $form_id, array( 'content_only' => true ) );
 
-		if ( ! current_user_can( 'unfiltered_html' ) && isset( $data['settings'] ) && is_array( $data['settings'] ) ) {
-			foreach ( array( 'evf-enable-custom-css', 'evf-custom-css', 'evf-enable-custom-js', 'evf-custom-js' ) as $key ) {
-				if ( isset( $evf_form_data['settings'][ $key ] ) ) {
-					$data['settings'][ $key ] = $evf_form_data['settings'][ $key ];
-				} else {
-					unset( $data['settings'][ $key ] );
-				}
-			}
-		}
-
 		if ( isset( $evf_form_data['meta']['entry_columns'] ) && ! isset( $data['meta']['entry_columns'] ) ) {
 			$data['meta']['entry_columns'] = $evf_form_data['meta']['entry_columns'];
 		}
