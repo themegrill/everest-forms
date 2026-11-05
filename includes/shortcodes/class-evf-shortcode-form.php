@@ -1,5 +1,4 @@
 <?php
-
 /**
  * Form Shortcode
  *
@@ -507,7 +506,7 @@ class EVF_Shortcode_Form {
 		}
 
 		$detector_js_url   = 'https://fd.cleantalk.org/ct-bot-detector-wrapper.js';
-		$clean_talk_inline = <<<JS
+		$clean_talk_inline = <<<'JS'
 		document.addEventListener("DOMContentLoaded", function () {
 			var loadInput = document.querySelector('input[name="everest_forms[evf_form_load_time]"]');
 			if (loadInput) {
@@ -541,7 +540,7 @@ class EVF_Shortcode_Form {
 				}
 			}, 500);
 		});
-		JS;
+JS;
 
 		// Enqueue cleanTalk scripts.
 		wp_enqueue_script(
@@ -675,7 +674,7 @@ class EVF_Shortcode_Form {
 				static $count = 1;
 				if ( 1 === $count ) {
 					wp_add_inline_script( 'evf-recaptcha', $recaptcha_inline );
-					$count++;
+					++$count;
 				}
 
 				// Output the reCAPTCHA container.
@@ -685,7 +684,7 @@ class EVF_Shortcode_Form {
 				if ( 'v2' === $recaptcha_type || 'hcaptcha' === $recaptcha_type || 'turnstile' === $recaptcha_type ) {
 					echo '<div ' . evf_html_attributes( '', array( 'g-recaptcha' ), $data ) . '></div>';
 
-					if ( 'hcaptcha' === $recaptcha_type && 'no' === $invisible_recaptcha || 'turnstile' === $recaptcha_type ) {
+					if ( ( 'hcaptcha' === $recaptcha_type && 'no' === $invisible_recaptcha ) || 'turnstile' === $recaptcha_type ) {
 						echo '<input type="text" name="g-recaptcha-hidden" class="evf-recaptcha-hidden" style="position:absolute!important;clip:rect(0,0,0,0)!important;height:1px!important;width:1px!important;border:0!important;overflow:hidden!important;padding:0!important;margin:0!important;" required>';
 					}
 				} else {
@@ -834,15 +833,13 @@ class EVF_Shortcode_Form {
 				foreach ( $sub_field_messages as $sub_field_type => $error_message ) {
 					$container_data[ 'required-field-message-' . $sub_field_type ] = htmlspecialchars( wp_kses( html_entity_decode( $error_message ), array() ) );
 				}
+			} elseif ( isset( $field['required_field_message_setting'] ) && 'global' === $field['required_field_message_setting'] ) {
+					$container_data['required-field-message'] = htmlspecialchars( wp_kses( html_entity_decode( $required_validation ), array() ) );
+			} elseif ( isset( $field['required-field-message'] ) && '' !== $field['required-field-message'] ) {
+				$required_data                            = evf_string_translation( $form_data['id'], $field['id'], $field['required-field-message'], '-required-field-message' );
+				$container_data['required-field-message'] = htmlspecialchars( wp_kses( html_entity_decode( $required_data ), array() ) );
 			} else {
-				if ( isset( $field['required_field_message_setting'] ) && 'global' === $field['required_field_message_setting'] ) {
-					$container_data['required-field-message'] = htmlspecialchars( wp_kses( html_entity_decode( $required_validation ), array() ) );
-				} elseif ( isset( $field['required-field-message'] ) && '' !== $field['required-field-message'] ) {
-					$required_data                            = evf_string_translation( $form_data['id'], $field['id'], $field['required-field-message'], '-required-field-message' );
-					$container_data['required-field-message'] = htmlspecialchars( wp_kses( html_entity_decode( $required_data ), array() ) );
-				} else {
-					$container_data['required-field-message'] = htmlspecialchars( wp_kses( html_entity_decode( $required_validation ), array() ) );
-				}
+				$container_data['required-field-message'] = htmlspecialchars( wp_kses( html_entity_decode( $required_validation ), array() ) );
 			}
 		}
 		$errors   = isset( evf()->task->errors[ $form_id ][ $field_id ] ) ? evf()->task->errors[ $form_id ][ $field_id ] : '';
@@ -859,7 +856,7 @@ class EVF_Shortcode_Form {
 		if ( isset( $field['default_value'] ) ) {
 			preg_match_all( '/\{field_id="(.+?)"\}/', $field['default_value'], $ids );
 			if ( ! empty( $ids[1] ) ) {
-				$count++;
+				++$count;
 			}
 		}
 
@@ -970,7 +967,13 @@ class EVF_Shortcode_Form {
 			wp_enqueue_script( 'mailcheck' );
 		}
 
-		// Add custom CSS/JS
+		// Load the international telephone input styles only when the form has a phone field.
+		if ( isset( $atts['id'] ) && evf_is_field_exists( $atts['id'], 'phone' ) ) {
+			wp_enqueue_style( 'jquery-intl-tel-input' );
+			EVF_Frontend_Scripts::maybe_print_late_styles( 'jquery-intl-tel-input' );
+		}
+
+		// Add custom CSS/JS.
 		if ( isset( $atts['id'] ) ) {
 			self::add_custom_css_js( $atts['id'] );
 		}
@@ -1035,18 +1038,33 @@ class EVF_Shortcode_Form {
 		// For form confirmation backward compatilibity.
 		$form_data = evf_form_confirmation_backward_compatibility( $form_data );
 
-		$form_id         = absint( $form->ID );
-		$settings        = isset( $form_data['settings'] ) ? $form_data['settings'] : array();
-		$action          = esc_url_raw( remove_query_arg( 'evf-forms' ) );
-		$title           = filter_var( $title, FILTER_VALIDATE_BOOLEAN );
-		$description     = filter_var( $description, FILTER_VALIDATE_BOOLEAN );
-		$errors          = isset( evf()->task->errors[ $form_id ] ) ? evf()->task->errors[ $form_id ] : array();
-		$form_enabled    = isset( $form_data['form_enabled'] ) ? absint( $form_data['form_enabled'] ) : 1;
-		$kff_enabled     = isset( $settings['keyboard_friendly_form'] ) ? absint( $settings['keyboard_friendly_form'] ) : 0;
-		$disable_message = isset( $form_data['settings']['form_disable_message'] ) ? evf_string_translation( $form_data['id'], 'form_disable_message', $form_data['settings']['form_disable_message'] ) : __( 'This form is disabled.', 'everest-forms' );
-		$stripe_via_selector = function_exists( 'evf_is_gateway_in_selector_allowlist' ) && evf_is_gateway_in_selector_allowlist( array( 'form_data' => $form_data, 'gateway' => 'stripe' ) );
-		$square_via_selector = function_exists( 'evf_is_gateway_in_selector_allowlist' ) && evf_is_gateway_in_selector_allowlist( array( 'form_data' => $form_data, 'gateway' => 'square' ) );
-		$paypal_via_selector = function_exists( 'evf_is_gateway_in_selector_allowlist' ) && evf_is_gateway_in_selector_allowlist( array( 'form_data' => $form_data, 'gateway' => 'paypal' ) );
+		$form_id             = absint( $form->ID );
+		$settings            = isset( $form_data['settings'] ) ? $form_data['settings'] : array();
+		$action              = esc_url_raw( remove_query_arg( 'evf-forms' ) );
+		$title               = filter_var( $title, FILTER_VALIDATE_BOOLEAN );
+		$description         = filter_var( $description, FILTER_VALIDATE_BOOLEAN );
+		$errors              = isset( evf()->task->errors[ $form_id ] ) ? evf()->task->errors[ $form_id ] : array();
+		$form_enabled        = isset( $form_data['form_enabled'] ) ? absint( $form_data['form_enabled'] ) : 1;
+		$kff_enabled         = isset( $settings['keyboard_friendly_form'] ) ? absint( $settings['keyboard_friendly_form'] ) : 0;
+		$disable_message     = isset( $form_data['settings']['form_disable_message'] ) ? evf_string_translation( $form_data['id'], 'form_disable_message', $form_data['settings']['form_disable_message'] ) : __( 'This form is disabled.', 'everest-forms' );
+		$stripe_via_selector = function_exists( 'evf_is_gateway_in_selector_allowlist' ) && evf_is_gateway_in_selector_allowlist(
+			array(
+				'form_data' => $form_data,
+				'gateway'   => 'stripe',
+			)
+		);
+		$square_via_selector = function_exists( 'evf_is_gateway_in_selector_allowlist' ) && evf_is_gateway_in_selector_allowlist(
+			array(
+				'form_data' => $form_data,
+				'gateway'   => 'square',
+			)
+		);
+		$paypal_via_selector = function_exists( 'evf_is_gateway_in_selector_allowlist' ) && evf_is_gateway_in_selector_allowlist(
+			array(
+				'form_data' => $form_data,
+				'gateway'   => 'paypal',
+			)
+		);
 		if ( ( isset( $form_data['payments']['stripe']['enable_stripe'] ) && '1' === $form_data['payments']['stripe']['enable_stripe'] ) || $stripe_via_selector || ( isset( $form_data['payments']['square']['enable_square'] ) && '1' === $form_data['payments']['square']['enable_square'] ) || $square_via_selector || $paypal_via_selector ) {
 			$ajax_form_submission = 1;
 		} else {
@@ -1133,7 +1151,7 @@ class EVF_Shortcode_Form {
 			return;
 		}
 
-		// Check the form state type
+		// Check the form state type.
 		$form_state_type = isset( $form_data['settings']['form_state_type'] ) ? $form_data['settings']['form_state_type'] : 'hide';
 
 		if ( 'hide' === $form_state_type ) {
@@ -1143,15 +1161,15 @@ class EVF_Shortcode_Form {
 		}
 		// If conditional logic match then getting messag and position.
 		if ( ! empty( $_REQUEST['evf_popup_message'] ) ) {
-			$message = sanitize_text_field( $_REQUEST['evf_popup_message'] );
+			$message = sanitize_text_field( wp_unslash( $_REQUEST['evf_popup_message'] ) );
 		}
 		if ( ! empty( $_REQUEST['evf_message_display_location'] ) ) {
-			$message_display_location = sanitize_text_field( $_REQUEST['evf_message_display_location'] );
+			$message_display_location = sanitize_text_field( wp_unslash( $_REQUEST['evf_message_display_location'] ) );
 		}
 
 		$form_state_type = '';
 		if ( ! empty( $_REQUEST['evf_form_state_type'] ) ) {
-			$form_state_type = sanitize_text_field( $_REQUEST['evf_form_state_type'] );
+			$form_state_type = sanitize_text_field( wp_unslash( $_REQUEST['evf_form_state_type'] ) );
 		}
 
 		$success = apply_filters( 'everest_forms_success', false, $form_id );
@@ -1309,7 +1327,7 @@ class EVF_Shortcode_Form {
 				$form_atts['data']['message_location'] = $message_display_location;
 				$form_atts['data']['message']          = esc_html( $message );
 			}
-			// Adding the form state type. hide or reset
+			// Adding the form state type. hide or reset.
 			$form_atts['data']['form_state_type'] = $form_state_type;
 
 			echo '<form ' . evf_html_attributes( $form_atts['id'], $form_atts['class'], $form_atts['data'], $form_atts['atts'] ) . '>';
@@ -1428,19 +1446,19 @@ class EVF_Shortcode_Form {
 					$custom_js
 				);
 
-				if ( ! wp_script_is('evf-custom', 'registered') ) {
+				if ( ! wp_script_is( 'evf-custom', 'registered' ) ) {
 					wp_register_script(
 						'evf-custom',
 						'',
-						array('jquery'),
+						array( 'jquery' ),
 						EVF_VERSION,
 						true
 					);
 				}
 
-				if ( ! wp_script_is('evf-custom', 'enqueued' ) ) {
-					wp_add_inline_script('evf-custom', $custom_js);
-					wp_enqueue_script('evf-custom');
+				if ( ! wp_script_is( 'evf-custom', 'enqueued' ) ) {
+					wp_add_inline_script( 'evf-custom', $custom_js );
+					wp_enqueue_script( 'evf-custom' );
 				}
 			}
 		}
