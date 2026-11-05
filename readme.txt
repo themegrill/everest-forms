@@ -349,6 +349,9 @@ You can report security bugs through the Patchstack Vulnerability Disclosure Pro
 
 == Changelog ==
 
+= 3.6.5       - xx-xx-2026
+* Fix 		  - Improved security of form data exposed in the block editor and email preview.
+
 = 3.6.4       - 02-11-2026
 * Enhance 	  - Improved handling of signature files in email notification attachments.
 

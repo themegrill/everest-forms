@@ -68,10 +68,18 @@ class EVF_Blocks {
 			defined( 'SCRIPT_DEBUG' ) && SCRIPT_DEBUG ? filemtime( evf()->plugin_path() . '/assets/js/admin/shortcode-form-embed.js' ) : EVF_VERSION,
 			true
 		);
+		$forms = array();
+		foreach ( (array) evf()->form->get_multiple( array( 'order' => 'DESC' ) ) as $form ) {
+			$forms[] = array(
+				'ID'         => $form->ID,
+				'post_title' => $form->post_title,
+			);
+		}
+
 		$form_block_data = array(
 			'evfRestApiNonce'          => wp_create_nonce( 'wp_rest' ),
 			'restURL'                  => rest_url(),
-			'forms'                    => evf()->form->get_multiple( array( 'order' => 'DESC' ) ),
+			'forms'                    => $forms,
 			'isPro'                    => defined( 'EFP_VERSION' ) && version_compare( EFP_VERSION, '1.7.3', '>=' ) ? true : false,
 			'isFrontendListingActive'  => defined( 'EVF_FRONTEND_LISTING_VERSION' ) && version_compare( EVF_FRONTEND_LISTING_VERSION, '1.0.0', '>=' ) ? true : false,
 			'isUserRegistrationActive' => defined( 'EVF_USER_REGISTRATION_VERSION' ) && version_compare( EVF_USER_REGISTRATION_VERSION, '1.1.3', '>=' ) ? true : false,
