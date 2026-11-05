@@ -547,7 +547,7 @@ if ( ! class_exists( 'EVF_Admin_Settings', false ) ) :
 						<?php
 							$arguments                                  = array(
 								'media_buttons'    => false,
-								'tinymce'          => false,
+								'tinymce'          => isset( $value['tinymce'] ) ? (bool) $value['tinymce'] : false,
 								'textarea_rows'    => get_option( 'default_post_edit_rows', 10 ),
 								'editor_class'     => 'everest_forms_tinymce_class',
 								'textarea_content' => true,
@@ -1073,13 +1073,17 @@ if ( ! class_exists( 'EVF_Admin_Settings', false ) ) :
 							if ( $is_connected ) {
 								$item_classes[] = 'is-connected';
 							}
+
+							$show_status_dot = isset( $item['is_enabled'] ) || isset( $item['connection_check'] );
 							?>
 			<div class="<?php echo esc_attr( implode( ' ', $item_classes ) ); ?>" data-accordion-index="<?php echo esc_attr( $index ); ?>">
 
 				<div class="everest-forms-accordion-header">
+							<?php if ( $show_status_dot ) : ?>
 					<div class="everest-forms-accordion-status">
 						<span class="toggle-switch-outer <?php echo $is_connected ? 'connected' : 'disconnected'; ?>"></span>
 					</div>
+					<?php endif; ?>
 
 							<?php if ( isset( $item['icon'] ) ) : ?>
 						<span class="everest-forms-accordion-icon">
@@ -1088,7 +1092,13 @@ if ( ! class_exists( 'EVF_Admin_Settings', false ) ) :
 					<?php endif; ?>
 
 					<h3 class="everest-forms-accordion-title">
-							<?php echo esc_html( $item['title'] ); ?>
+							<?php
+							echo esc_html( $item['title'] );
+							if ( ! empty( $item['badge'] ) && ! empty( $item['badge']['label'] ) ) {
+								$badge_type = isset( $item['badge']['type'] ) ? $item['badge']['type'] : 'default';
+								echo '<span class="everest-forms-accordion-badge everest-forms-accordion-badge--' . esc_attr( $badge_type ) . '">' . esc_html( $item['badge']['label'] ) . '</span>';
+							}
+							?>
 					</h3>
 
 					<span class="everest-forms-accordion-toggle">
@@ -1100,6 +1110,9 @@ if ( ! class_exists( 'EVF_Admin_Settings', false ) ) :
 				<div class="everest-forms-accordion-content">
 					<div class="everest-forms-accordion-content-inner">
 							<?php
+							if ( ! empty( $item['desc'] ) ) {
+								echo wp_kses_post( wpautop( wptexturize( $item['desc'] ) ) );
+							}
 							if ( isset( $item['fields'] ) && is_array( $item['fields'] ) ) {
 								self::output_fields( $item['fields'] );
 							}
