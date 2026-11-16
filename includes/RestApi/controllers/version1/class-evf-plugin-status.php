@@ -52,7 +52,7 @@ class Everest_Forms_Plugin_Status {
 			array(
 				'methods'             => 'POST',
 				'callback'            => array( $this, 'plugin_activate' ),
-				'permission_callback' => array( $this, 'check_admin_permissions' ),
+				'permission_callback' => array( $this, 'check_plugin_management_permissions' ),
 			)
 		);
 		register_rest_route(
@@ -61,7 +61,7 @@ class Everest_Forms_Plugin_Status {
 			array(
 				'methods'             => 'POST',
 				'callback'            => array( $this, 'plugin_upgrade' ),
-				'permission_callback' => array( $this, 'check_admin_permissions' ),
+				'permission_callback' => array( $this, 'check_plugin_management_permissions' ),
 			)
 		);
 	}
@@ -288,6 +288,16 @@ class Everest_Forms_Plugin_Status {
 		require_once ABSPATH . '/wp-admin/includes/file.php';
 		include_once ABSPATH . 'wp-admin/includes/class-wp-upgrader.php';
 		include_once ABSPATH . 'wp-admin/includes/plugin-install.php';
+
+		// Restrict activation to genuine Everest Forms addons so this endpoint
+		// cannot be used to install or activate arbitrary plugins.
+		if ( ! in_array( $slug, EVF_Modules::get_allowed_addon_slugs(), true ) ) {
+			$status['success']      = false;
+			$status['errorCode']    = 'invalid_addon_slug';
+			$status['errorMessage'] = esc_html__( 'The requested module is not a valid Everest Forms addon.', 'everest-forms' );
+			return $status;
+		}
+
 		if ( file_exists( WP_PLUGIN_DIR . '/' . $plugin ) ) {
 			$plugin_data          = get_plugin_data( WP_PLUGIN_DIR . '/' . $plugin );
 			$status['plugin']     = $plugin;
@@ -460,6 +470,42 @@ class Everest_Forms_Plugin_Status {
 
 		// Capability check.
 		if ( ! current_user_can( 'manage_everest_forms' ) && ! current_user_can( 'everest_forms_create_forms' ) ) {
+			return new WP_Error(
+				'rest_forbidden',
+				esc_html__( 'You are not allowed to access this resource.', 'everest-forms' ),
+				array( 'status' => 403 )
+			);
+		}
+
+		return true;
+	}
+
+	/**
+	 * Check whether the request may install or activate addon plugins.
+	 *
+	 * Installing and activating plugins is an administrator-level action, so the
+	 * form-building capabilities are not enough here: the user must be able to
+	 * activate plugins, matching the Modules controller.
+	 *
+	 * @since 3.6.5
+	 *
+	 * @param WP_REST_Request $request Full data about the request.
+	 * @return WP_Error|bool
+	 */
+	public function check_plugin_management_permissions( $request ) {
+		$nonce = $request->get_header( 'X-WP-Nonce' );
+
+		// Nonce check.
+		if ( ! wp_verify_nonce( $nonce, 'wp_rest' ) ) {
+			return new WP_Error(
+				'rest_forbidden',
+				esc_html__( 'You do not have permissions to perform this action.', 'everest-forms' ),
+				array( 'status' => 403 )
+			);
+		}
+
+		// Capability check.
+		if ( ! current_user_can( 'activate_plugins' ) ) {
 			return new WP_Error(
 				'rest_forbidden',
 				esc_html__( 'You are not allowed to access this resource.', 'everest-forms' ),
