@@ -2297,6 +2297,13 @@ class EVF_Form_Task {
 			return;
 		}
 
+		// This form's own upload and signature directories. Deletions are confined to
+		// these, so a stored value can never reach another form's files or the shared
+		// everest_forms_uploads root (for example its .htaccess).
+		$form_post     = get_post( $form_id );
+		$form_folder   = $form_post ? $everest_forms_dir . '/' . absint( $form_id ) . '-' . wp_hash( $form_id . $form_post->post_date ) : false;
+		$signature_dir = $everest_forms_dir . '/' . absint( $form_id ) . '/signature';
+
 		foreach ( $get_entry->meta as $meta_key => $meta_value ) {
 			if ( empty( $meta_value ) ) {
 				continue;
@@ -2307,9 +2314,8 @@ class EVF_Form_Task {
 			// Only a field actually configured as a signature holds a stored file path; the
 			// meta key alone is not trusted, because a text field value is attacker-controlled.
 			if ( 'signature' === $field_type ) {
-				$signature_dir = $everest_forms_dir . '/' . absint( $form_id ) . '/signature';
 				$this->safe_delete_file( $meta_value, $signature_dir );
-			} elseif ( 'file-upload' === $field_type || 'image-upload' === $field_type ) {
+			} elseif ( $form_folder && ( 'file-upload' === $field_type || 'image-upload' === $field_type ) ) {
 				$files = explode( "\n", $meta_value );
 				foreach ( $files as $file ) {
 					$path_from_url = wp_parse_url( $file, PHP_URL_PATH );
@@ -2323,7 +2329,7 @@ class EVF_Form_Task {
 						$path_from_url
 					);
 
-					$this->safe_delete_file( $uploaded_file, $everest_forms_dir );
+					$this->safe_delete_file( $uploaded_file, $form_folder );
 				}
 			}
 		}

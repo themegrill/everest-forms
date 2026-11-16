@@ -209,20 +209,50 @@ class EVF_Form_Task_Entry_Delete_Test extends WP_UnitTestCase {
 
 		$this->delete_entry_with_meta( array( 'signature_1' => $own ) );
 
-		$this->assertFileDoesNotExist( $own );
+		// PHPUnit 7.5 (pinned in composer.lock) names this assertFileNotExists().
+		$this->assertFileNotExists( $own );
 	}
 
 	/**
-	 * A genuinely uploaded file is still removed through the upload branch.
+	 * A genuinely uploaded file in this form's own folder is still removed.
 	 */
 	public function test_uploaded_file_is_deleted() {
-		$upload_dir = wp_get_upload_dir();
-		$folder     = $this->form_id . '-upload';
-		$file       = $this->make_file( $this->uploads_dir . '/everest_forms_uploads/' . $folder . '/report.pdf' );
-		$url        = $upload_dir['baseurl'] . '/everest_forms_uploads/' . $folder . '/report.pdf';
+		$file = $this->make_file( $this->form_upload_dir() . '/report.pdf' );
+		$url  = wp_get_upload_dir()['baseurl'] . '/everest_forms_uploads/' . $this->form_folder() . '/report.pdf';
 
 		$this->delete_entry_with_meta( array( 'file_upload' => $url ) );
 
-		$this->assertFileDoesNotExist( $file );
+		$this->assertFileNotExists( $file );
+	}
+
+	/**
+	 * A file stored under another form's upload folder must not be deleted,
+	 * even though it is inside everest_forms_uploads.
+	 */
+	public function test_other_form_upload_is_not_deleted() {
+		$other     = $this->make_file( $this->uploads_dir . '/everest_forms_uploads/424242-deadbeef/report.pdf' );
+		$other_url = wp_get_upload_dir()['baseurl'] . '/everest_forms_uploads/424242-deadbeef/report.pdf';
+
+		$this->delete_entry_with_meta( array( 'file_upload' => $other_url ) );
+
+		$this->assertFileExists( $other );
+	}
+
+	/**
+	 * This form's hashed upload folder, matching EVF_Form_Fields_Upload::get_form_files_dir().
+	 *
+	 * @return string
+	 */
+	protected function form_folder() {
+		return $this->form_id . '-' . wp_hash( $this->form_id . get_post( $this->form_id )->post_date );
+	}
+
+	/**
+	 * Absolute path to this form's hashed upload folder.
+	 *
+	 * @return string
+	 */
+	protected function form_upload_dir() {
+		return $this->uploads_dir . '/everest_forms_uploads/' . $this->form_folder();
 	}
 }
