@@ -353,7 +353,6 @@ You can report security bugs through the Patchstack Vulnerability Disclosure Pro
 * Enhance 	  - Improved handling of signature files in email notification attachments.
 * Fix 		  - Improved security of form data exposed in the block editor and email preview.
 * Fix 		  - Improved security of form editing permissions and custom CSS/JS output.
-* Fix 		  - Improved security of WYSIWYG field content stored and shown in form entries.
 * Fix 		  - Custom JavaScript containing double quotes did not run on the form page.
 
 = 3.6.3       - 15-10-2026

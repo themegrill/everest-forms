@@ -246,7 +246,8 @@ class EVF_Field_Wysiwyg extends EVF_Form_Fields {
 		if ( array_key_exists( 'value_raw', $field_value ) && ! empty( $field_value['value_raw'] ) ) {
 
 			if ( ! in_array( $field['meta_key'], apply_filters( 'everest_forms_hidden_entry_fields', array() ), true ) ) {
-				$output = $field['value_raw'];
+				// Entries stored by an earlier version can still hold attributes the field no longer saves.
+				$output = evf_sanitize_wysiwyg( $field['value_raw'] );
 			}
 		}
 
