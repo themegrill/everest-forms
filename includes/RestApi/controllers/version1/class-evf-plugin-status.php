@@ -285,18 +285,19 @@ class Everest_Forms_Plugin_Status {
 	 * @global WP_Filesystem_Base $wp_filesystem Subclass
 	 */
 	public static function install_individual_addon( $slug, $plugin, $name, $status ) {
-		require_once ABSPATH . '/wp-admin/includes/file.php';
-		include_once ABSPATH . 'wp-admin/includes/class-wp-upgrader.php';
-		include_once ABSPATH . 'wp-admin/includes/plugin-install.php';
-
 		// Restrict activation to genuine Everest Forms addons so this endpoint
-		// cannot be used to install or activate arbitrary plugins.
+		// cannot be used to install or activate arbitrary plugins. Checked first
+		// so rejected slugs return without loading the admin upgrader includes.
 		if ( ! in_array( $slug, EVF_Modules::get_allowed_addon_slugs(), true ) ) {
 			$status['success']      = false;
 			$status['errorCode']    = 'invalid_addon_slug';
 			$status['errorMessage'] = esc_html__( 'The requested module is not a valid Everest Forms addon.', 'everest-forms' );
 			return $status;
 		}
+
+		require_once ABSPATH . '/wp-admin/includes/file.php';
+		include_once ABSPATH . 'wp-admin/includes/class-wp-upgrader.php';
+		include_once ABSPATH . 'wp-admin/includes/plugin-install.php';
 
 		if ( file_exists( WP_PLUGIN_DIR . '/' . $plugin ) ) {
 			$plugin_data          = get_plugin_data( WP_PLUGIN_DIR . '/' . $plugin );
@@ -485,7 +486,10 @@ class Everest_Forms_Plugin_Status {
 	 *
 	 * Installing and activating plugins is an administrator-level action, so the
 	 * form-building capabilities are not enough here: the user must be able to
-	 * activate plugins, matching the Modules controller.
+	 * activate plugins, matching the Modules controller. The REST nonce is not
+	 * checked explicitly, so that non-cookie authentication (Application
+	 * Passwords, OAuth) keeps working; core already enforces the nonce for
+	 * cookie-authenticated requests, so CSRF is still covered.
 	 *
 	 * @since 3.6.5
 	 *
@@ -493,18 +497,6 @@ class Everest_Forms_Plugin_Status {
 	 * @return WP_Error|bool
 	 */
 	public function check_plugin_management_permissions( $request ) {
-		$nonce = $request->get_header( 'X-WP-Nonce' );
-
-		// Nonce check.
-		if ( ! wp_verify_nonce( $nonce, 'wp_rest' ) ) {
-			return new WP_Error(
-				'rest_forbidden',
-				esc_html__( 'You do not have permissions to perform this action.', 'everest-forms' ),
-				array( 'status' => 403 )
-			);
-		}
-
-		// Capability check.
 		if ( ! current_user_can( 'activate_plugins' ) ) {
 			return new WP_Error(
 				'rest_forbidden',

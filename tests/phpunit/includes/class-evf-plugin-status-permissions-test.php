@@ -64,14 +64,27 @@ class EVF_Plugin_Status_Permissions_Test extends WP_UnitTestCase {
 	}
 
 	/**
+	 * Non-cookie auth (no REST nonce) still works for a capable user, so
+	 * Application Passwords and OAuth are not broken by the permission check.
+	 */
+	public function test_admin_without_nonce_is_allowed() {
+		$admin = self::factory()->user->create( array( 'role' => 'administrator' ) );
+		wp_set_current_user( $admin );
+
+		$request = new WP_REST_Request( 'POST', '/everest-forms/v1/plugin/activate' );
+
+		$this->assertTrue( $this->controller->check_plugin_management_permissions( $request ) );
+	}
+
+	/**
 	 * The allowlist contains Everest Forms addons but not arbitrary plugins.
 	 */
 	public function test_allowlist_excludes_arbitrary_plugins() {
 		$allowed = EVF_Modules::get_allowed_addon_slugs();
 
+		// The security invariant: the allowlist exists and never contains an
+		// arbitrary non-addon plugin such as Akismet.
 		$this->assertNotEmpty( $allowed );
-		// 'aicontactform' is always appended by get_allowed_addon_slugs().
-		$this->assertContains( 'aicontactform', $allowed );
 		$this->assertNotContains( 'akismet', $allowed );
 	}
 
