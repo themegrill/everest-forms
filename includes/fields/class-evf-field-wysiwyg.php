@@ -78,7 +78,7 @@ class EVF_Field_Wysiwyg extends EVF_Form_Fields {
 				&& $this->type === sanitize_text_field( wp_unslash( (string) $field_value['type'] ) )
 			) {
 				return ! empty( $field_value['value'] )
-					? wp_kses_post( wp_unslash( (string) $field_value['value'] ) )
+					? evf_sanitize_wysiwyg( wp_unslash( (string) $field_value['value'] ) )
 					: '';
 			}
 		}
@@ -168,7 +168,7 @@ class EVF_Field_Wysiwyg extends EVF_Form_Fields {
 			$value = isset( $entry_field['value'] ) && is_string( $entry_field['value'] ) ? $entry_field['value'] : '';
 		}
 
-		$this->display_editor( $field, $form_data, wp_kses_post( $value ) );
+		$this->display_editor( $field, $form_data, evf_sanitize_wysiwyg( $value ) );
 	}
 
 	/**
@@ -223,7 +223,7 @@ class EVF_Field_Wysiwyg extends EVF_Form_Fields {
 		evf()->task->form_fields[ $field_id ] = array(
 			'name'      => $name,
 			'value'     => evf_sanitize_textarea( $field_submit ),
-			'value_raw' => wp_kses_post( $field_submit ),
+			'value_raw' => evf_sanitize_wysiwyg( $field_submit ),
 			'id'        => $field_id,
 			'type'      => $this->type,
 			'meta_key'  => $meta_key,
