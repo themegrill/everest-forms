@@ -228,8 +228,9 @@ if ( false !== $entry_index ) {
 									);
 									$meta_field_type = isset( $field_type_by_meta_key[ $meta_key ] ) ? $field_type_by_meta_key[ $meta_key ] : '';
 									if ( is_string( $field_value ) && in_array( $meta_field_type, $allow_html_types, true ) ) {
-										// Entries stored by an earlier version can still hold attributes the field no longer saves.
-										echo 'wysiwyg' === $meta_field_type ? evf_sanitize_wysiwyg( $field_value ) : wp_kses_post( $field_value ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Both branches escape through wp_kses().
+										// Every field type rendered as HTML here holds submitted content, so it goes through the
+										// restricted allowlist that drops class, id and data-* — the attributes admin scripts key off.
+										echo evf_sanitize_wysiwyg( $field_value ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Escaped through wp_kses() inside evf_sanitize_wysiwyg().
 									} elseif ( in_array( $meta_field_type, array( 'file-upload', 'image-upload', 'signature', 'color', 'rating', 'country', 'likert', 'checkbox', 'radio', 'payment-checkbox' ), true ) ) {
 										echo nl2br( make_clickable( $field_value ) );
 									} else {

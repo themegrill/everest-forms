@@ -535,7 +535,13 @@ $.Tooltipster.prototype = {
 					$el;
 				
 				if (selector){
-					$el = $(selector);
+					// Resolve strictly as a selector so an attribute value such as
+					// "<img src=x onerror=...>" is never handed to jQuery() as HTML.
+					try {
+						$el = $(document).find(selector);
+					} catch (e) {
+						$el = null;
+					}
 				}
 				
 				if ($el && $el[0]) {
