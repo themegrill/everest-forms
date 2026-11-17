@@ -780,10 +780,6 @@ class EVF_Form_Task {
 					foreach ( $decoded_coupons as $coupon ) {
 						$field_id = isset( $coupon['field_id'] ) ? $coupon['field_id'] : '';
 
-						// Only accept coupon data for a field actually configured as a coupon on
-						// this form. field_id comes from the request, so without this check a
-						// visitor could append arbitrary content to the stored value of any
-						// field, including a file-upload field.
 						if (
 							empty( $field_id )
 							|| ! isset( $this->form_fields[ $field_id ] )
