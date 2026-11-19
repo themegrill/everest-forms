@@ -487,7 +487,10 @@
 		})
 
 		.on( 'init_tooltips', function() {
-			$( '.tips, .help_tip, .everest-forms-help-tip, .everest-forms-help-tooltip, .everest-forms-icon' ).tooltipster( {
+			// Entry values are visitor-supplied, so their markup must never initialise a tooltip.
+			$( '.tips, .help_tip, .everest-forms-help-tip, .everest-forms-help-tooltip, .everest-forms-icon' ).filter( function() {
+				return ! $( this ).closest( '.evf-field-value, .everest-forms-entry-field' ).length;
+			} ).tooltipster( {
 				maxWidth: 200,
 				multiple: true,
 				interactive: true,

@@ -152,6 +152,25 @@ function evf_sanitize_textarea( $var ) {
 }
 
 /**
+ * Sanitize rich text submitted through a WYSIWYG field.
+ *
+ * Stricter than wp_kses_post(): admin screens initialise behaviour from markup
+ * attributes, so visitor-supplied class, id and data-* attributes are dropped.
+ *
+ * @since 3.6.4
+ *
+ * @param string $var Submitted rich text.
+ * @return string
+ */
+function evf_sanitize_wysiwyg( $var ) {
+	if ( ! is_string( $var ) ) {
+		return '';
+	}
+
+	return wp_kses( $var, evf_get_allowed_html_tags( 'wysiwyg' ) );
+}
+
+/**
  * Sanitize a string destined to be a tooltip.
  *
  * @since  1.0.0 Tooltips are encoded with htmlspecialchars to prevent XSS. Should not be used in conjunction with esc_attr()

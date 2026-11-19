@@ -176,7 +176,7 @@ class EVF_Entry_Submission {
 					}
 					if ( 'wysiwyg' === $field_type ) {
 						$form_fields[ $field_id ]['value']     = wp_strip_all_tags( $field_value );
-						$form_fields[ $field_id ]['value_raw'] = $field_value;
+						$form_fields[ $field_id ]['value_raw'] = evf_sanitize_wysiwyg( $field_value );
 
 					}
 

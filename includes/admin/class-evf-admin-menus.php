@@ -339,13 +339,13 @@ class EVF_Admin_Menus {
 			EVF_Admin_Settings::save();
 		}
 
-		// Add any posted messages.
+		// Add any posted messages. These come from the URL, so they are plain text only — never markup.
 		if ( ! empty( $_GET['evf_error'] ) ) { // phpcs:ignore WordPress.Security.NonceVerification
-			EVF_Admin_Settings::add_error( wp_kses_post( wp_unslash( $_GET['evf_error'] ) ) ); // phpcs:ignore WordPress.Security.NonceVerification
+			EVF_Admin_Settings::add_error( sanitize_text_field( wp_unslash( $_GET['evf_error'] ) ) ); // phpcs:ignore WordPress.Security.NonceVerification
 		}
 
 		if ( ! empty( $_GET['evf_message'] ) ) { // phpcs:ignore WordPress.Security.NonceVerification
-			EVF_Admin_Settings::add_message( wp_kses_post( wp_unslash( $_GET['evf_message'] ) ) ); // phpcs:ignore WordPress.Security.NonceVerification
+			EVF_Admin_Settings::add_message( sanitize_text_field( wp_unslash( $_GET['evf_message'] ) ) ); // phpcs:ignore WordPress.Security.NonceVerification
 		}
 
 		do_action( 'everest_forms_settings_page_init' );

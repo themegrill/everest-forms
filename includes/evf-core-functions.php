@@ -4740,6 +4740,19 @@ function evf_get_allowed_html_tags($context = '')
 		return $post_tags;
 	}
 
+	if ('wysiwyg' === $context) {
+		// Admin screens initialise behaviour from markup attributes, so visitor content keeps none of them.
+		foreach ($post_tags as $tag => $attributes) {
+			if (! is_array($attributes)) {
+				continue;
+			}
+
+			unset($post_tags[$tag]['class'], $post_tags[$tag]['id'], $post_tags[$tag]['data-*']);
+		}
+
+		return $post_tags;
+	}
+
 	return wp_parse_args(
 		$post_tags,
 		array(
@@ -4856,9 +4869,11 @@ function evf_sanitize_entry($entry = array())
 				case 'textarea':
 				case 'html':
 				case 'privacy-policy':
-				case 'wysiwyg':
 					// A request can submit this field as an array (e.g. form_fields[<id>][]); wp_kses_post() expects a string and fatals on anything else.
 					$entry['form_fields'][$key] = wp_kses_post( is_scalar( $entry['form_fields'][$key] ) ? $entry['form_fields'][$key] : '' );
+					break;
+				case 'wysiwyg':
+					$entry['form_fields'][$key] = evf_sanitize_wysiwyg( is_scalar( $entry['form_fields'][$key] ) ? $entry['form_fields'][$key] : '' );
 					break;
 				case 'repeater-fields':
 					$entry['form_fields'][$key] = $entry['form_fields'][$key];

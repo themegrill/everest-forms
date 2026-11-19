@@ -228,7 +228,10 @@ if ( false !== $entry_index ) {
 									);
 									$meta_field_type = isset( $field_type_by_meta_key[ $meta_key ] ) ? $field_type_by_meta_key[ $meta_key ] : '';
 									if ( is_string( $field_value ) && in_array( $meta_field_type, $allow_html_types, true ) ) {
-										echo wp_kses_post( $field_value );
+										// WYSIWYG is raw visitor markup, so it takes the restricted allowlist that drops
+										// class/id/data-*. Other HTML types here (repeater) build their own trusted markup
+										// with their submitted values already escaped inside, so they keep wp_kses_post().
+										echo 'wysiwyg' === $meta_field_type ? evf_sanitize_wysiwyg( $field_value ) : wp_kses_post( $field_value ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Both branches escape through wp_kses().
 									} elseif ( in_array( $meta_field_type, array( 'file-upload', 'image-upload', 'signature', 'color', 'rating', 'country', 'likert', 'checkbox', 'radio', 'payment-checkbox' ), true ) ) {
 										echo nl2br( make_clickable( $field_value ) );
 									} else {

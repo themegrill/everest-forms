@@ -10,6 +10,8 @@ its changelog entry in the spec's `@source`. This is still a **starting** suite
 
 | Release | Change | Spec |
 |---|---|---|
+| 3.6.4 | Stored XSS from a WYSIWYG field value opened on the entry screen | `security/wysiwyg-entry-stored-xss` |
+| 3.6.4 | Reflected XSS from a crafted settings notice link | `security/settings-error-reflected-xss` |
 | 3.6.1 | Query params in external redirect URLs were HTML-encoded | `submission/external-redirect-query-params` |
 | 3.6.0 | Revamped Style Customizer — panel structure | `style-customizer/style-customizer-v2` |
 | 3.6.0 | Revamped Style Customizer — a preset reaches the form | `style-customizer/color-preset-reaches-front-end` |

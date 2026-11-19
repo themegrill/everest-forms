@@ -186,7 +186,7 @@ if ( ! class_exists( 'EVF_Admin_Settings', false ) ) :
 		public static function show_messages() {
 			if ( count( self::$errors ) > 0 ) {
 				foreach ( self::$errors as $error ) {
-					echo '<div id="message" class="error inline"><p><strong>' . wp_kses_post( $error ) . '</strong></p></div>';
+					echo '<div id="message" class="error inline"><p><strong>' . esc_html( $error ) . '</strong></p></div>';
 				}
 			} elseif ( count( self::$messages ) > 0 ) {
 				foreach ( self::$messages as $message ) {
