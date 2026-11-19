@@ -2291,7 +2291,18 @@ class EVF_Form_Task {
 
 		$uploads           = wp_upload_dir();
 		$base_dir          = realpath( $uploads['basedir'] );
-		$everest_forms_dir = $base_dir ? realpath( $base_dir . '/everest_forms_uploads' ) : false;
+		$everest_forms_dir = $base_dir ? $base_dir . '/everest_forms_uploads' : false;
+
+		if ( ! $everest_forms_dir ) {
+			return;
+		}
+
+		// This form's own upload and signature directories. Deletions are confined to
+		// these, so a stored value can never reach another form's files or the shared
+		// everest_forms_uploads root (for example its .htaccess).
+		$form_post     = get_post( $form_id );
+		$form_folder   = $form_post ? $everest_forms_dir . '/' . absint( $form_id ) . '-' . wp_hash( $form_id . $form_post->post_date ) : false;
+		$signature_dir = $everest_forms_dir . '/' . absint( $form_id ) . '/signature';
 
 		foreach ( $get_entry->meta as $meta_key => $meta_value ) {
 			if ( empty( $meta_value ) ) {
@@ -2300,9 +2311,11 @@ class EVF_Form_Task {
 
 			$field_type = isset( $field_types[ $meta_key ] ) ? $field_types[ $meta_key ] : '';
 
-			if ( preg_match( '/signature_/', $meta_key ) || $field_type === 'signature' ) {
-				$this->safe_delete_file( $meta_value, $base_dir );
-			} elseif ( 'file-upload' === $field_type || 'image-upload' === $field_type ) {
+			// Only a field actually configured as a signature holds a stored file path; the
+			// meta key alone is not trusted, because a text field value is attacker-controlled.
+			if ( 'signature' === $field_type ) {
+				$this->safe_delete_file( $meta_value, $signature_dir );
+			} elseif ( $form_folder && ( 'file-upload' === $field_type || 'image-upload' === $field_type ) ) {
 				$files = explode( "\n", $meta_value );
 				foreach ( $files as $file ) {
 					$path_from_url = wp_parse_url( $file, PHP_URL_PATH );
@@ -2316,7 +2329,7 @@ class EVF_Form_Task {
 						$path_from_url
 					);
 
-					$this->safe_delete_file( $uploaded_file, $base_dir );
+					$this->safe_delete_file( $uploaded_file, $form_folder );
 				}
 			}
 		}
@@ -2352,22 +2365,38 @@ class EVF_Form_Task {
 	}
 
 	/**
-	 * Securely delete a file with path validation
+	 * Securely delete a file, confined to a specific directory.
 	 *
-	 * @param string $path File path to delete
-	 * @param string $allowed_base Base directory path (must be realpath result)
+	 * The resolved file must be a regular file located inside $allowed_dir; anything
+	 * resolving outside of it (via traversal, symlink or a sibling "uploads-*" folder)
+	 * is ignored rather than deleted.
+	 *
+	 * @param string $path        File path to delete.
+	 * @param string $allowed_dir Directory the file must be inside of.
 	 */
-	private function safe_delete_file( $path, $allowed_base ) {
-		if ( ! $allowed_base || empty( $path ) ) {
+	private function safe_delete_file( $path, $allowed_dir ) {
+		if ( empty( $path ) || ! is_string( $path ) || empty( $allowed_dir ) ) {
 			return;
 		}
-		$normalized_path = wp_normalize_path( $path );
-		$resolved_path   = realpath( $normalized_path );
-		// Validate path is within allowed directory
-		if ( $resolved_path && strpos( $resolved_path, $allowed_base ) === 0 ) {
-			if ( is_file( $resolved_path ) ) {
-				wp_delete_file( $resolved_path );
-			}
+
+		// Reject null-byte poisoning before touching the filesystem.
+		if ( false !== strpos( $path, "\0" ) ) {
+			return;
+		}
+
+		$allowed_dir   = realpath( $allowed_dir );
+		$resolved_path = realpath( wp_normalize_path( $path ) );
+
+		if ( false === $allowed_dir || false === $resolved_path || ! is_file( $resolved_path ) ) {
+			return;
+		}
+
+		// Trailing slash keeps a sibling such as "uploads-backup" from matching "uploads".
+		$allowed_dir   = trailingslashit( wp_normalize_path( $allowed_dir ) );
+		$resolved_path = wp_normalize_path( $resolved_path );
+
+		if ( 0 === strpos( $resolved_path, $allowed_dir ) ) {
+			wp_delete_file( $resolved_path );
 		}
 	}
 
