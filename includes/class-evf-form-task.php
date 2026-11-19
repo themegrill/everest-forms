@@ -779,12 +779,20 @@ class EVF_Form_Task {
 				if ( is_array( $decoded_coupons ) ) {
 					foreach ( $decoded_coupons as $coupon ) {
 						$field_id = isset( $coupon['field_id'] ) ? $coupon['field_id'] : '';
-						if ( ! empty( $field_id ) && isset( $this->form_fields[ $field_id ] ) ) {
-							if ( ! is_array( $this->form_fields[ $field_id ]['value'] ) ) {
-								$this->form_fields[ $field_id ]['value'] = array();
-							}
-							$this->form_fields[ $field_id ]['value'][] = $coupon;
+
+						if (
+							empty( $field_id )
+							|| ! isset( $this->form_fields[ $field_id ] )
+							|| ! isset( $this->form_data['form_fields'][ $field_id ]['type'] )
+							|| 'payment-coupon' !== $this->form_data['form_fields'][ $field_id ]['type']
+						) {
+							continue;
 						}
+
+						if ( ! is_array( $this->form_fields[ $field_id ]['value'] ) ) {
+							$this->form_fields[ $field_id ]['value'] = array();
+						}
+						$this->form_fields[ $field_id ]['value'][] = $coupon;
 					}
 				}
 			}
