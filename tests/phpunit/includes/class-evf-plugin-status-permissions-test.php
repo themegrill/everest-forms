@@ -77,6 +77,62 @@ class EVF_Plugin_Status_Permissions_Test extends WP_UnitTestCase {
 	}
 
 	/**
+	 * Dispatch a POST to one of the plugin routes through the REST server.
+	 *
+	 * @param string $route Route path after the namespace, e.g. 'plugin/upgrade'.
+	 * @param array  $body  Request body parameters.
+	 * @return WP_REST_Response
+	 */
+	protected function dispatch( $route, $body ) {
+		$server = rest_get_server();
+		$this->controller->register_routes();
+
+		$request = new WP_REST_Request( 'POST', '/everest-forms/v1/' . $route );
+		$request->set_header( 'X-WP-Nonce', wp_create_nonce( 'wp_rest' ) );
+		$request->set_body_params( $body );
+
+		return $server->dispatch( $request );
+	}
+
+	/**
+	 * A form creator must still reach the read-only Pro check that form
+	 * templates call first, or "Use this template" fails for them.
+	 */
+	public function test_form_creator_can_check_pro_status_for_templates() {
+		$user = self::factory()->user->create_and_get( array( 'role' => 'editor' ) );
+		$user->add_cap( 'everest_forms_create_forms' );
+		wp_set_current_user( $user->ID );
+
+		$response = $this->dispatch( 'plugin/upgrade', array( 'requiredPlugins' => array( 'everest-forms-pro' ) ) );
+
+		$this->assertSame( 200, $response->get_status() );
+		$this->assertArrayHasKey( 'plugin_status', $response->get_data() );
+	}
+
+	/**
+	 * The same form creator is still refused by the route that activates plugins.
+	 */
+	public function test_form_creator_cannot_activate_through_rest() {
+		$user = self::factory()->user->create_and_get( array( 'role' => 'editor' ) );
+		$user->add_cap( 'everest_forms_create_forms' );
+		wp_set_current_user( $user->ID );
+
+		$response = $this->dispatch(
+			'plugin/activate',
+			array(
+				'moduleData' => array(
+					array(
+						'type' => 'addon',
+						'slug' => 'akismet',
+					),
+				),
+			)
+		);
+
+		$this->assertSame( 403, $response->get_status() );
+	}
+
+	/**
 	 * The allowlist contains Everest Forms addons but not arbitrary plugins.
 	 */
 	public function test_allowlist_excludes_arbitrary_plugins() {

@@ -61,7 +61,7 @@ class Everest_Forms_Plugin_Status {
 			array(
 				'methods'             => 'POST',
 				'callback'            => array( $this, 'plugin_upgrade' ),
-				'permission_callback' => array( $this, 'check_plugin_management_permissions' ),
+				'permission_callback' => array( $this, 'check_admin_permissions' ),
 			)
 		);
 	}
