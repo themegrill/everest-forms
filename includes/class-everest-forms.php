@@ -23,7 +23,7 @@ final class EverestForms {
 	 *
 	 * @var string
 	 */
-	public $version = '3.6.4';
+	public $version = '3.6.5';
 
 	/**
 	 * The single instance of the class.

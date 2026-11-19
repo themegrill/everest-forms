@@ -4,7 +4,7 @@ Tags: contact form, custom form, form builder, forms, survey
 Requires at least: 5.5
 Tested up to: 7.1.3
 Requires PHP: 7.2
-Stable tag: 3.6.4
+Stable tag: 3.6.5
 License: GPLv3
 License URI: http://www.gnu.org/licenses/gpl-3.0.html
 
@@ -349,6 +349,11 @@ You can report security bugs through the Patchstack Vulnerability Disclosure Pro
 
 == Changelog ==
 
+= 3.6.5       - 19-11-2026
+* Fix 		  - Improved security of file deletion when deleting form entries.
+* Fix 		  - Improved security of coupon data handling on form submission.
+* Fix 		  - Improved security of the addon install and activation REST endpoints.
+* Fix 		  - Improved security of WYSIWYG field content stored and shown in form entries.
 = 3.6.4       - 05-11-2026
 * Enhance 	  - Improved handling of signature files in email notification attachments.
 * Fix 		  - Improved security of form data exposed in the block editor and email preview.

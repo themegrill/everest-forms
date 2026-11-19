@@ -2,9 +2,9 @@
 # This file is distributed under the no.
 msgid ""
 msgstr ""
-"Project-Id-Version: Everest Forms 3.6.4\n"
+"Project-Id-Version: Everest Forms 3.6.5\n"
 "Report-Msgid-Bugs-To: https://wordpress.org/support/plugin/everest-forms\n"
-"POT-Creation-Date: 2026-10-15 06:49:40+00:00\n"
+"POT-Creation-Date: 2026-11-19 07:02:03+00:00\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=utf-8\n"
 "Content-Transfer-Encoding: 8bit\n"
@@ -489,7 +489,7 @@ msgstr ""
 #: addons/StyleCustomizer/V2/Schema.php:69
 #: addons/WPBakeryBuilder/WPBakeryBuilder.php:73
 #: includes/admin/class-evf-admin-entries-table-list.php:110
-#: includes/class-evf-post-types.php:53
+#: includes/class-evf-post-types.php:101
 #: includes/elementor/class-evf-widget.php:103
 msgid "Form"
 msgstr ""
@@ -2342,7 +2342,7 @@ msgstr ""
 #: includes/admin/builder/class-evf-builder-settings.php:431
 #: includes/admin/form-migrator/class-evf-fm-contactform7.php:409
 #: includes/admin/form-migrator/class-evf-fm-wpforms.php:163
-#: includes/class-evf-form-task.php:1397 includes/evf-update-functions.php:140
+#: includes/class-evf-form-task.php:1405 includes/evf-update-functions.php:140
 #: includes/templates/contact.php:71
 msgid "Admin Notification"
 msgstr ""
@@ -2445,23 +2445,24 @@ msgid "Module activated successfully"
 msgstr ""
 
 #: includes/RestApi/controllers/version1/class-evf-modules.php:308
+#: includes/RestApi/controllers/version1/class-evf-plugin-status.php:294
 #: includes/class-evf-ajax.php:726 includes/class-evf-ajax.php:1450
 msgid "The requested module is not a valid Everest Forms addon."
 msgstr ""
 
 #: includes/RestApi/controllers/version1/class-evf-modules.php:333
-#: includes/RestApi/controllers/version1/class-evf-plugin-status.php:306
+#: includes/RestApi/controllers/version1/class-evf-plugin-status.php:317
 msgid "Addons activated successfully"
 msgstr ""
 
 #: includes/RestApi/controllers/version1/class-evf-modules.php:406
-#: includes/RestApi/controllers/version1/class-evf-plugin-status.php:378
+#: includes/RestApi/controllers/version1/class-evf-plugin-status.php:389
 #: includes/class-evf-ajax.php:903
 msgid "Unable to connect to the filesystem. Please confirm your credentials."
 msgstr ""
 
 #: includes/RestApi/controllers/version1/class-evf-modules.php:419
-#: includes/RestApi/controllers/version1/class-evf-plugin-status.php:391
+#: includes/RestApi/controllers/version1/class-evf-plugin-status.php:402
 msgid "Addon installed Successfully"
 msgstr ""
 
@@ -2534,12 +2535,13 @@ msgstr ""
 msgid "Failed to update enabled features."
 msgstr ""
 
-#: includes/RestApi/controllers/version1/class-evf-plugin-status.php:456
+#: includes/RestApi/controllers/version1/class-evf-plugin-status.php:467
 #: includes/RestApi/controllers/version1/class-evf-templates.php:547
 msgid "You do not have permissions to perform this action."
 msgstr ""
 
-#: includes/RestApi/controllers/version1/class-evf-plugin-status.php:465
+#: includes/RestApi/controllers/version1/class-evf-plugin-status.php:476
+#: includes/RestApi/controllers/version1/class-evf-plugin-status.php:503
 #: includes/RestApi/controllers/version1/class-evf-templates.php:556
 msgid "You are not allowed to access this resource."
 msgstr ""
@@ -2692,7 +2694,7 @@ msgstr ""
 
 #: includes/RestApi/controllers/version1/class-evf-templates.php:488
 #: includes/admin/form-migrator/class-evf-fm-contactform7.php:437
-#: includes/class-evf-form-task.php:117 includes/class-evf-form-task.php:890
+#: includes/class-evf-form-task.php:117 includes/class-evf-form-task.php:898
 #: includes/shortcodes/class-evf-shortcode-form.php:1106
 #: includes/shortcodes/class-evf-shortcode-form.php:1119
 #: includes/templates/contact.php:61
@@ -3107,33 +3109,33 @@ msgstr ""
 msgid "Something went wrong while uploading file,Please try again"
 msgstr ""
 
-#: includes/abstracts/class-evf-form-fields-upload.php:1910
+#: includes/abstracts/class-evf-form-fields-upload.php:1927
 msgid "The uploaded file exceeds the upload_max_filesize directive in php.ini."
 msgstr ""
 
-#: includes/abstracts/class-evf-form-fields-upload.php:1911
+#: includes/abstracts/class-evf-form-fields-upload.php:1928
 msgid ""
 "The uploaded file exceeds the MAX_FILE_SIZE directive that was specified in "
 "the HTML form."
 msgstr ""
 
-#: includes/abstracts/class-evf-form-fields-upload.php:1912
+#: includes/abstracts/class-evf-form-fields-upload.php:1929
 msgid "The uploaded file was only partially uploaded."
 msgstr ""
 
-#: includes/abstracts/class-evf-form-fields-upload.php:1913
+#: includes/abstracts/class-evf-form-fields-upload.php:1930
 msgid "No file was uploaded."
 msgstr ""
 
-#: includes/abstracts/class-evf-form-fields-upload.php:1914
+#: includes/abstracts/class-evf-form-fields-upload.php:1931
 msgid "Missing a temporary folder."
 msgstr ""
 
-#: includes/abstracts/class-evf-form-fields-upload.php:1915
+#: includes/abstracts/class-evf-form-fields-upload.php:1932
 msgid "Failed to write file to disk."
 msgstr ""
 
-#: includes/abstracts/class-evf-form-fields-upload.php:1916
+#: includes/abstracts/class-evf-form-fields-upload.php:1933
 msgid "File upload stopped by extension."
 msgstr ""
 
@@ -3370,25 +3372,25 @@ msgstr ""
 
 #: includes/abstracts/class-evf-form-fields.php:1365
 #: includes/admin/class-evf-admin-settings.php:845
-#: includes/evf-formatting-functions.php:576
+#: includes/evf-formatting-functions.php:595
 msgid "Day(s)"
 msgstr ""
 
 #: includes/abstracts/class-evf-form-fields.php:1366
 #: includes/admin/class-evf-admin-settings.php:846
-#: includes/evf-formatting-functions.php:577
+#: includes/evf-formatting-functions.php:596
 msgid "Week(s)"
 msgstr ""
 
 #: includes/abstracts/class-evf-form-fields.php:1367
 #: includes/admin/class-evf-admin-settings.php:847
-#: includes/evf-formatting-functions.php:578
+#: includes/evf-formatting-functions.php:597
 msgid "Month(s)"
 msgstr ""
 
 #: includes/abstracts/class-evf-form-fields.php:1368
 #: includes/admin/class-evf-admin-settings.php:848
-#: includes/evf-formatting-functions.php:579
+#: includes/evf-formatting-functions.php:598
 msgid "Year(s)"
 msgstr ""
 
@@ -4472,7 +4474,7 @@ msgid "Email Message"
 msgstr ""
 
 #: includes/admin/builder/class-evf-builder-settings.php:615
-#: templates/emails/email-preview.php:58
+#: templates/emails/email-preview.php:64
 msgid "{all_fields}"
 msgstr ""
 
@@ -5291,7 +5293,7 @@ msgid "Field"
 msgstr ""
 
 #: includes/admin/class-evf-admin-entries-table-list.php:543
-#: includes/admin/views/html-admin-page-entries-view.php:312
+#: includes/admin/views/html-admin-page-entries-view.php:315
 #: includes/templates/entries-report.php:291
 msgid "View"
 msgstr ""
@@ -5353,7 +5355,7 @@ msgstr[1] ""
 
 #: includes/admin/class-evf-admin-entries-table-list.php:946
 #: includes/admin/class-evf-admin-entries.php:477
-#: includes/class-evf-form-task.php:1951
+#: includes/class-evf-form-task.php:1959
 msgid "Form Entry Approved"
 msgstr ""
 
@@ -5361,14 +5363,14 @@ msgstr ""
 #: includes/admin/class-evf-admin-entries-table-list.php:1012
 #: includes/admin/class-evf-admin-entries.php:479
 #: includes/admin/class-evf-admin-entries.php:537
-#: includes/class-evf-form-task.php:1953 includes/class-evf-form-task.php:2034
+#: includes/class-evf-form-task.php:1961 includes/class-evf-form-task.php:2042
 #. translators:%s: User name of form entry
 #. translators: %s is the name of the user
 msgid "Hey, %s"
 msgstr ""
 
 #: includes/admin/class-evf-admin-entries-table-list.php:950
-#: includes/class-evf-form-task.php:1955
+#: includes/class-evf-form-task.php:1963
 #. translators:%s: Form Entry Date
 #. translators: %s is the entry_date.
 msgid ""
@@ -5385,7 +5387,7 @@ msgstr ""
 #: includes/admin/class-evf-admin-entries-table-list.php:1017
 #: includes/admin/class-evf-admin-entries.php:484
 #: includes/admin/class-evf-admin-entries.php:542
-#: includes/class-evf-form-task.php:1958 includes/class-evf-form-task.php:2039
+#: includes/class-evf-form-task.php:1966 includes/class-evf-form-task.php:2047
 #. translators:%s: Site Name
 #. translators: %s is the site_name.
 msgid "From %s"
@@ -5468,7 +5470,7 @@ msgstr ""
 #: includes/admin/class-evf-admin-menus.php:94
 #: includes/admin/class-evf-admin-menus.php:182
 #: includes/admin/views/html-admin-header-skeleton.php:37
-#: includes/class-evf-post-types.php:54
+#: includes/class-evf-post-types.php:102
 msgid "All Forms"
 msgstr ""
 
@@ -5532,12 +5534,12 @@ msgstr ""
 
 #: includes/admin/class-evf-admin-entries.php:482
 #: includes/admin/class-evf-admin-entries.php:540
-#: includes/class-evf-form-task.php:1956 includes/class-evf-form-task.php:2037
+#: includes/class-evf-form-task.php:1964 includes/class-evf-form-task.php:2045
 msgid "Thank you for giving us your precious time."
 msgstr ""
 
 #: includes/admin/class-evf-admin-entries.php:535
-#: includes/class-evf-form-task.php:2032
+#: includes/class-evf-form-task.php:2040
 #. translators: %s is the message.
 msgid "Entry Submission Denied"
 msgstr ""
@@ -5566,7 +5568,7 @@ msgid "Shortcode"
 msgstr ""
 
 #: includes/admin/class-evf-admin-forms-table-list.php:60
-#: includes/admin/views/html-admin-page-entries-view.php:267
+#: includes/admin/views/html-admin-page-entries-view.php:270
 #: includes/export/class-evf-entry-csv-exporter.php:100
 msgid "Status"
 msgstr ""
@@ -5596,7 +5598,7 @@ msgid "Edit this Form"
 msgstr ""
 
 #: includes/admin/class-evf-admin-forms-table-list.php:178
-#: includes/class-evf-post-types.php:58
+#: includes/class-evf-post-types.php:106
 msgid "Edit"
 msgstr ""
 
@@ -5751,7 +5753,7 @@ msgstr ""
 
 #: includes/admin/class-evf-admin-forms.php:84
 #: includes/admin/class-evf-admin-menus.php:103
-#: includes/class-evf-post-types.php:56
+#: includes/class-evf-post-types.php:104
 msgid "Add New"
 msgstr ""
 
@@ -6862,22 +6864,22 @@ msgid "Personal Information"
 msgstr ""
 
 #: includes/admin/views/html-admin-page-entries-view.php:88
-#: includes/admin/views/html-admin-page-entries-view.php:386
+#: includes/admin/views/html-admin-page-entries-view.php:389
 msgid "Show empty fields"
 msgstr ""
 
 #: includes/admin/views/html-admin-page-entries-view.php:88
-#: includes/admin/views/html-admin-page-entries-view.php:376
+#: includes/admin/views/html-admin-page-entries-view.php:379
 msgid "Hide empty fields"
 msgstr ""
 
 #: includes/admin/views/html-admin-page-entries-view.php:91
-#: includes/admin/views/html-admin-page-entries-view.php:387
+#: includes/admin/views/html-admin-page-entries-view.php:390
 msgid "Show Empty Fields"
 msgstr ""
 
 #: includes/admin/views/html-admin-page-entries-view.php:92
-#: includes/admin/views/html-admin-page-entries-view.php:377
+#: includes/admin/views/html-admin-page-entries-view.php:380
 msgid "Hide Empty Fields"
 msgstr ""
 
@@ -6889,49 +6891,49 @@ msgstr ""
 msgid "Field ID"
 msgstr ""
 
-#: includes/admin/views/html-admin-page-entries-view.php:240
+#: includes/admin/views/html-admin-page-entries-view.php:243
 msgid "Empty"
 msgstr ""
 
-#: includes/admin/views/html-admin-page-entries-view.php:256
+#: includes/admin/views/html-admin-page-entries-view.php:259
 msgid "Entry Details"
 msgstr ""
 
-#: includes/admin/views/html-admin-page-entries-view.php:264
+#: includes/admin/views/html-admin-page-entries-view.php:267
 #: includes/export/class-evf-entry-csv-exporter.php:77
 msgid "ID"
 msgstr ""
 
-#: includes/admin/views/html-admin-page-entries-view.php:265
+#: includes/admin/views/html-admin-page-entries-view.php:268
 msgid "User"
 msgstr ""
 
-#: includes/admin/views/html-admin-page-entries-view.php:266
+#: includes/admin/views/html-admin-page-entries-view.php:269
 #: includes/admin/views/html-admin-page-setting.php:281
 msgid "IP"
 msgstr ""
 
-#: includes/admin/views/html-admin-page-entries-view.php:268
+#: includes/admin/views/html-admin-page-entries-view.php:271
 msgid "Submitted Date"
 msgstr ""
 
-#: includes/admin/views/html-admin-page-entries-view.php:270
+#: includes/admin/views/html-admin-page-entries-view.php:273
 msgid "Modified Date"
 msgstr ""
 
-#: includes/admin/views/html-admin-page-entries-view.php:272
+#: includes/admin/views/html-admin-page-entries-view.php:275
 msgid "Referer Link"
 msgstr ""
 
-#: includes/admin/views/html-admin-page-entries-view.php:291
+#: includes/admin/views/html-admin-page-entries-view.php:294
 msgid "Guest"
 msgstr ""
 
-#: includes/admin/views/html-admin-page-entries-view.php:331
+#: includes/admin/views/html-admin-page-entries-view.php:334
 msgid "Entry Actions"
 msgstr ""
 
-#: includes/admin/views/html-admin-page-entries-view.php:351
+#: includes/admin/views/html-admin-page-entries-view.php:354
 msgid "Delete Entry"
 msgstr ""
 
@@ -8263,58 +8265,58 @@ msgstr ""
 msgid "Entry Added to Database."
 msgstr ""
 
-#: includes/class-evf-form-task.php:800
+#: includes/class-evf-form-task.php:808
 msgid "Sent Email Notification."
 msgstr ""
 
-#: includes/class-evf-form-task.php:817
+#: includes/class-evf-form-task.php:825
 msgid "Everest Forms Process Completed."
 msgstr ""
 
-#: includes/class-evf-form-task.php:865
+#: includes/class-evf-form-task.php:873
 msgid "Something error occur"
 msgstr ""
 
-#: includes/class-evf-form-task.php:962 templates/notices/success.php:70
+#: includes/class-evf-form-task.php:970 templates/notices/success.php:70
 msgid "Download your form submission in PDF format"
 msgstr ""
 
-#: includes/class-evf-form-task.php:1143
+#: includes/class-evf-form-task.php:1151
 msgid ""
 "Payment could not be completed. Please try again or use a different payment "
 "method."
 msgstr ""
 
-#: includes/class-evf-form-task.php:1428
+#: includes/class-evf-form-task.php:1436
 #. translators: %s - form name.
 msgid "New %s Entry"
 msgstr ""
 
-#: includes/class-evf-form-task.php:1552
+#: includes/class-evf-form-task.php:1560
 msgid "No form ID was found."
 msgstr ""
 
-#: includes/class-evf-form-task.php:1559
+#: includes/class-evf-form-task.php:1567
 msgid "Could not create an entry"
 msgstr ""
 
-#: includes/class-evf-form-task.php:2036
+#: includes/class-evf-form-task.php:2044
 #. translators: %s is the entry_date.
 msgid ""
 "We’re sorry to inform you that your form entry submitted on %s has been "
 "denied."
 msgstr ""
 
-#: includes/class-evf-form-task.php:2111
+#: includes/class-evf-form-task.php:2119
 #. translators: %s is the message.
 msgid "Please wait"
 msgstr ""
 
-#: includes/class-evf-form-task.php:2114
+#: includes/class-evf-form-task.php:2122
 msgid "seconds, security checkup is being executed."
 msgstr ""
 
-#: includes/class-evf-form-task.php:2137 includes/class-evf-form-task.php:2164
+#: includes/class-evf-form-task.php:2145 includes/class-evf-form-task.php:2172
 msgid "Security check failed. Please try again."
 msgstr ""
 
@@ -8489,75 +8491,75 @@ msgstr ""
 msgid "%1$s was called with an invalid level \"%2$s\"."
 msgstr ""
 
-#: includes/class-evf-post-types.php:57
+#: includes/class-evf-post-types.php:105
 msgid "Add new form"
 msgstr ""
 
-#: includes/class-evf-post-types.php:59
+#: includes/class-evf-post-types.php:107
 msgid "Edit form"
 msgstr ""
 
-#: includes/class-evf-post-types.php:60
+#: includes/class-evf-post-types.php:108
 msgid "New form"
 msgstr ""
 
-#: includes/class-evf-post-types.php:61
+#: includes/class-evf-post-types.php:109
 msgid "View form"
 msgstr ""
 
-#: includes/class-evf-post-types.php:62
+#: includes/class-evf-post-types.php:110
 msgid "Search forms"
 msgstr ""
 
-#: includes/class-evf-post-types.php:63
+#: includes/class-evf-post-types.php:111
 msgid "No forms found"
 msgstr ""
 
-#: includes/class-evf-post-types.php:64
+#: includes/class-evf-post-types.php:112
 msgid "No forms found in trash"
 msgstr ""
 
-#: includes/class-evf-post-types.php:65
+#: includes/class-evf-post-types.php:113
 msgid "Parent forms"
 msgstr ""
 
-#: includes/class-evf-post-types.php:66
+#: includes/class-evf-post-types.php:114
 msgid "Form image"
 msgstr ""
 
-#: includes/class-evf-post-types.php:67
+#: includes/class-evf-post-types.php:115
 msgid "Set form image"
 msgstr ""
 
-#: includes/class-evf-post-types.php:68
+#: includes/class-evf-post-types.php:116
 msgid "Remove form image"
 msgstr ""
 
-#: includes/class-evf-post-types.php:69
+#: includes/class-evf-post-types.php:117
 msgid "Use as form image"
 msgstr ""
 
-#: includes/class-evf-post-types.php:70
+#: includes/class-evf-post-types.php:118
 msgid "Insert into form"
 msgstr ""
 
-#: includes/class-evf-post-types.php:71
+#: includes/class-evf-post-types.php:119
 msgid "Uploaded to this form"
 msgstr ""
 
-#: includes/class-evf-post-types.php:72
+#: includes/class-evf-post-types.php:120
 msgid "Filter forms"
 msgstr ""
 
-#: includes/class-evf-post-types.php:73
+#: includes/class-evf-post-types.php:121
 msgid "Forms navigation"
 msgstr ""
 
-#: includes/class-evf-post-types.php:74
+#: includes/class-evf-post-types.php:122
 msgid "Forms list"
 msgstr ""
 
-#: includes/class-evf-post-types.php:78
+#: includes/class-evf-post-types.php:126
 msgid "This is where you can add new forms."
 msgstr ""
 
@@ -17513,19 +17515,19 @@ msgid ""
 "with spaces."
 msgstr ""
 
-#: includes/evf-core-functions.php:5273 includes/evf-core-functions.php:5316
+#: includes/evf-core-functions.php:5288 includes/evf-core-functions.php:5331
 msgid "Everest Forms Daily Entries Statistics Report"
 msgstr ""
 
-#: includes/evf-core-functions.php:5278 includes/evf-core-functions.php:5321
+#: includes/evf-core-functions.php:5293 includes/evf-core-functions.php:5336
 msgid "Everest Forms Weekly Entries Statistics Report"
 msgstr ""
 
-#: includes/evf-core-functions.php:5283 includes/evf-core-functions.php:5326
+#: includes/evf-core-functions.php:5298 includes/evf-core-functions.php:5341
 msgid "Everest Forms Monthly Entries Statistics Report"
 msgstr ""
 
-#: includes/evf-core-functions.php:5507
+#: includes/evf-core-functions.php:5522
 #. translators: %s: Status Log URL
 msgid ""
 "Please check the `evf_mail_errors` log under <a target=\"_blank\" "
@@ -19184,7 +19186,7 @@ msgctxt "post"
 msgid "Inactive"
 msgstr ""
 
-#: includes/class-evf-post-types.php:55
+#: includes/class-evf-post-types.php:103
 msgctxt "Admin menu name"
 msgid "Forms"
 msgstr ""
