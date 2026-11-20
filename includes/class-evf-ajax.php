@@ -1656,7 +1656,17 @@ class EVF_AJAX {
 	public static function fm_dismiss_notice() {
 		try {
 			check_ajax_referer( 'evf_fm_dismiss_notice_nonce', 'security' );
-			$option_id = isset( $_POST['option_id'] ) ? sanitize_text_field( $_POST['option_id'] ) : ''; //phpcs:ignore WordPress.Security.ValidatedSanitizedInput.MissingUnslash
+
+			if ( ! current_user_can( 'manage_options' ) ) {
+				wp_send_json_error( array( 'message' => __( 'You do not have permission to perform this action.', 'everest-forms' ) ) );
+			}
+
+			$option_id = isset( $_POST['option_id'] ) ? sanitize_text_field( wp_unslash( $_POST['option_id'] ) ) : '';
+
+			if ( '' === $option_id || 0 !== strpos( $option_id, 'evf_fm_dismiss_xnotice_' ) ) {
+				wp_send_json_error( array( 'message' => __( 'Invalid notice.', 'everest-forms' ) ) );
+			}
+
 			update_option( $option_id, true );
 
 			wp_send_json_success(
