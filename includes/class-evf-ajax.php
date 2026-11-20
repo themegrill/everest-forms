@@ -1663,7 +1663,15 @@ class EVF_AJAX {
 
 			$option_id = isset( $_POST['option_id'] ) ? sanitize_text_field( wp_unslash( $_POST['option_id'] ) ) : '';
 
-			if ( '' === $option_id || 0 !== strpos( $option_id, 'evf_fm_dismiss_xnotice_' ) ) {
+			$allowed_notices = apply_filters(
+				'everest_forms_fm_dismissible_notice_options',
+				array(
+					'evf_fm_dismiss_xnotice_contact-form-7',
+					'evf_fm_dismiss_xnotice_wpforms',
+				)
+			);
+
+			if ( ! in_array( $option_id, $allowed_notices, true ) ) {
 				wp_send_json_error( array( 'message' => __( 'Invalid notice.', 'everest-forms' ) ) );
 			}
 
