@@ -199,9 +199,14 @@ class EVF_Field_Wysiwyg extends EVF_Form_Fields {
 			'editor_class'  => 'evf-wysiwyg ' . implode( ' ', $primary['class'] ),
 			'textarea_name' => $primary['attr']['name'],
 		);
+		$encode_brackets = static function ( $content ) {
+			return str_replace( array( '[', ']' ), array( '&#91;', '&#93;' ), $content );
+		};
+		add_filter( 'the_editor_content', $encode_brackets, 99 );
 		ob_start();
 		wp_editor( $value, $primary['id'], $settings );
 		$output = ob_get_clean();
+		remove_filter( 'the_editor_content', $encode_brackets, 99 );
 		echo $output; //phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
 		printf( '</div>' );
 	}
