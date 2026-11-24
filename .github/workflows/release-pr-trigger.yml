@@ -1,0 +1,33 @@
+# Tells tg-autopilot to refresh this repo's "Release" PR as soon as a PR is
+# merged into pre-develop, so the Release PR's linked issues and changelog update
+# within seconds. The work itself runs in themegrill/.github (Release PR workflow);
+# this job only sends the event. A 6-hourly schedule there is the safety net if an
+# event is ever missed.
+name: Refresh Release PR
+
+on:
+  pull_request:
+    types: [closed]
+    branches: [pre-develop]
+
+# The job uses the BOT_TOKEN secret only; the built-in token needs no access.
+permissions: {}
+
+jobs:
+  notify:
+    # Merged (not just closed), and from a branch in this repo: PRs from forks
+    # get no secrets, so they are left to the scheduled run.
+    if: >-
+      github.event.pull_request.merged == true &&
+      github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-latest
+    steps:
+      - name: Send release-pr event
+        env:
+          GH_TOKEN: ${{ secrets.BOT_TOKEN }}
+          TARGET_REPO: ${{ github.repository }}
+        run: |
+          gh api repos/themegrill/.github/dispatches \
+            -f event_type=release-pr \
+            -f "client_payload[repo]=${TARGET_REPO}" \
+          || { echo "::error::Could not send the release-pr event. The Release PR will still refresh on tg-autopilot's scheduled run."; exit 1; }
