@@ -5732,3 +5732,32 @@ function evf_form_confirmation_backward_compatibility($form_data)
 
 	return $form_data;
 }
+
+if ( ! function_exists( 'evf_get_upload_tmp_file_path' ) ) {
+	/**
+	 * Path of a temporary upload on disk for the name returned to the browser.
+	 *
+	 * The stored name carries a site-secret suffix, so the public URL of a
+	 * temporary upload cannot be derived from the name the browser receives.
+	 * Files stored under the plain name before this change are still found.
+	 *
+	 * @since 3.6.6
+	 *
+	 * @param string $file File name returned by the upload request.
+	 * @return string
+	 */
+	function evf_get_upload_tmp_file_path( $file ) {
+		$uploads   = wp_upload_dir();
+		$tmp_root  = untrailingslashit( $uploads['basedir'] ) . '/everest_forms_uploads/tmp/';
+		$file      = sanitize_file_name( $file );
+		$extension = pathinfo( $file, PATHINFO_EXTENSION );
+		$stored    = pathinfo( $file, PATHINFO_FILENAME ) . '-' . wp_hash( 'evf_upload_tmp_' . $file ) . ( '' !== $extension ? '.' . $extension : '' );
+
+		if ( ! is_file( $tmp_root . $stored ) && '' !== $file && is_file( $tmp_root . $file ) ) {
+			return $tmp_root . $file;
+		}
+
+		return $tmp_root . $stored;
+	}
+}
+
