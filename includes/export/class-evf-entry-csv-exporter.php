@@ -426,14 +426,18 @@ class EVF_Entry_CSV_Exporter extends EVF_CSV_Exporter {
 							$form_field     = $form_fields[ $column_id ];
 							$likert_columns = $form_field['likert_columns'];
 							$likert_rows    = $form_field['likert_rows'];
-							if ( ! empty( $fields[ $column_id ]['value_raw'] ) ) {
-								foreach ( $fields[ $column_id ]['value_raw'] as $likert_key ) {
-									$selected_likert[] = $likert_columns[ $likert_key ];
+							$likert_answers = ! empty( $fields[ $column_id ]['value_raw'] ) && is_array( $fields[ $column_id ]['value_raw'] ) ? $fields[ $column_id ]['value_raw'] : array();
+							$is_select      = isset( $form_field['input_type'] ) && 'select' === $form_field['input_type'];
+							foreach ( (array) $likert_rows as $row_key => $row_label ) {
+								$row_answer = isset( $likert_answers[ $row_key ] ) ? $likert_answers[ $row_key ] : '';
+								$row_labels = array();
+								foreach ( (array) $row_answer as $answer_value ) {
+									$label = $is_select ? $answer_value : ( isset( $likert_columns[ $answer_value ] ) ? $likert_columns[ $answer_value ] : '' );
+									if ( is_scalar( $label ) && '' !== (string) $label ) {
+										$row_labels[] = $label;
+									}
 								}
-							} else {
-								foreach ( $likert_rows as $likert_rows ) {
-									$selected_likert[] = '';
-								}
+								$selected_likert[] = implode( ', ', $row_labels );
 							}
 						}
 						$value = $selected_likert;
