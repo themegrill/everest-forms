@@ -437,7 +437,7 @@ class EVF_Entry_CSV_Exporter extends EVF_CSV_Exporter {
 										$row_labels[] = $label;
 									}
 								}
-								$selected_likert[] = implode( ', ', $row_labels );
+								$selected_likert[ $row_key ] = implode( ', ', $row_labels );
 							}
 						}
 						$value = $selected_likert;
@@ -454,7 +454,6 @@ class EVF_Entry_CSV_Exporter extends EVF_CSV_Exporter {
 			$column_type = $this->get_entry_type( $column_id, $entry );
 			if ( is_array( $value ) && isset( $fields[ $column_id ], $fields[ $column_id ]['type'] ) && in_array( $fields[ $column_id ]['type'], array( 'likert' ), true ) ) {
 				foreach ( $value as $key => $val ) {
-					$key                 = $key + 1;
 					$col_row_key         = "$column_id-likert-$key";
 					$row[ $col_row_key ] = $val;
 				}
