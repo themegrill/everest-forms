@@ -64,12 +64,12 @@ test('upload endpoint rejects an unknown field_id for a visitor @fresh @security
 /**
  * @area    security
  * @tier    fresh
- * @source  security report — anonymous uploads publicly served from the tmp folder
- * @why     A visitor could upload a file without submitting the form and the
- *          server stored it at a public URL built from the name it returned, so
- *          bots used it to host indexed spam PDFs. Guards that the returned name
- *          does not resolve to a public tmp URL; does not assert where submitted
- *          files end up or that the upload itself is refused.
+ * @source  security report — temporary uploads reachable at a public URL
+ * @why     A file uploaded without submitting the form was stored at a public
+ *          URL built from the name the upload request returned, so it could be
+ *          fetched and indexed. Guards that the returned name does not resolve to
+ *          a public tmp URL; does not assert where submitted files end up or that
+ *          the upload itself is refused.
  */
 test('anonymous upload is not served from a guessable tmp URL @fresh @security', async ({
   page,
@@ -104,7 +104,7 @@ test('anonymous upload is not served from a guessable tmp URL @fresh @security',
     expect(
       served.status(),
       `An anonymous, unsubmitted upload is publicly served at ${tmpUrl}. ` +
-        'This is the tmp-folder exposure used to host indexed spam files.',
+        'Temporary uploads must not be reachable at a URL derived from the returned name.',
     ).not.toBe(200);
   } finally {
     await visitor.close();
