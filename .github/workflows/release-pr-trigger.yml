@@ -3,6 +3,9 @@
 # within seconds. The work itself runs in themegrill/.github (Release PR workflow);
 # this job only sends the event. A 6-hourly schedule there is the safety net if an
 # event is ever missed.
+#
+# To check it after changing anything here: merge a small PR into pre-develop and
+# confirm this workflow runs green and the Release PR refreshes within a minute.
 name: Refresh Release PR
 
 on:
