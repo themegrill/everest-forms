@@ -270,4 +270,66 @@ class EVF_Form_Fields_Upload_Attachment_Test extends WP_UnitTestCase {
 
 		$this->assertSame( array( $upload ), $attachments );
 	}
+
+	/**
+	 * Run the post-email cleanup for attachments created during the request.
+	 *
+	 * @param array  $attachment_ids     Attachment IDs created in the request.
+	 * @param string $disabled_entries   The form's disabled_entries setting.
+	 */
+	protected function run_email_cleanup( $attachment_ids, $disabled_entries ) {
+		$property = new ReflectionProperty( 'EVF_Field_File_Upload', 'request_attachments' );
+		$property->setAccessible( true );
+		$property->setValue( $this->field, $attachment_ids );
+
+		$this->field->remove_csv_file_after_email_send( array(), array(), array( 'settings' => array( 'disabled_entries' => $disabled_entries ) ), 'entry-email', 'connection_1', 0 );
+	}
+
+	/**
+	 * Create a Media Library attachment backed by a real file.
+	 *
+	 * @param string $name File name.
+	 * @return int Attachment ID.
+	 */
+	protected function create_media_attachment( $name ) {
+		$file          = $this->make_file( $this->uploads_dir . '/evf-media-test/' . $name );
+		$attachment_id = wp_insert_attachment(
+			array(
+				'post_mime_type' => 'application/pdf',
+				'post_title'     => $name,
+				'post_status'    => 'inherit',
+			),
+			$file
+		);
+
+		return (int) $attachment_id;
+	}
+
+	/**
+	 * With entry storage disabled, Media Library uploads made in the request are removed after the email.
+	 */
+	public function test_request_media_attachment_is_removed_when_entries_are_disabled() {
+		$attachment_id = $this->create_media_attachment( 'evf-media-disabled.pdf' );
+		$file          = get_attached_file( $attachment_id );
+
+		$this->run_email_cleanup( array( $attachment_id ), '1' );
+
+		$this->assertNull( get_post( $attachment_id ) );
+		$this->assertFileNotExists( $file );
+	}
+
+	/**
+	 * With entry storage on, the email cleanup keeps the request's Media Library uploads.
+	 */
+	public function test_request_media_attachment_is_kept_when_entries_are_stored() {
+		$attachment_id = $this->create_media_attachment( 'evf-media-stored.pdf' );
+		$file          = get_attached_file( $attachment_id );
+
+		$this->run_email_cleanup( array( $attachment_id ), '0' );
+
+		$this->assertNotNull( get_post( $attachment_id ) );
+		$this->assertFileExists( $file );
+
+		wp_delete_attachment( $attachment_id, true );
+	}
 }

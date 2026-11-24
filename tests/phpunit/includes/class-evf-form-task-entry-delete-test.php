@@ -239,6 +239,118 @@ class EVF_Form_Task_Entry_Delete_Test extends WP_UnitTestCase {
 	}
 
 	/**
+	 * Create a Media Library attachment backed by a real file.
+	 *
+	 * @param string $name File name.
+	 * @return int Attachment ID.
+	 */
+	protected function create_media_attachment( $name ) {
+		$file          = $this->make_file( $this->uploads_dir . '/evf-media-test/' . $name );
+		$attachment_id = wp_insert_attachment(
+			array(
+				'post_mime_type' => 'application/pdf',
+				'post_title'     => $name,
+				'post_status'    => 'inherit',
+			),
+			$file
+		);
+
+		return (int) $attachment_id;
+	}
+
+	/**
+	 * Store an entry with the given upload field data, then delete it through the
+	 * real deletion flow.
+	 *
+	 * @param array $files Upload field value_raw items.
+	 */
+	protected function delete_entry_with_upload_files( $files ) {
+		global $wpdb;
+
+		$value  = implode( "\n", wp_list_pluck( $files, 'value' ) );
+		$fields = array(
+			'upload' => array(
+				'id'        => 'upload',
+				'type'      => 'file-upload',
+				'meta_key'  => 'file_upload', // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_key
+				'value'     => $value,
+				'value_raw' => $files,
+			),
+		);
+
+		$wpdb->insert( // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery
+			$wpdb->prefix . 'evf_entries',
+			array(
+				'form_id'      => $this->form_id,
+				'user_id'      => 0,
+				'user_device'  => '',
+				'referer'      => '',
+				'fields'       => wp_json_encode( $fields ),
+				'status'       => 'publish',
+				'viewed'       => 1,
+				'date_created' => current_time( 'mysql', true ),
+			)
+		);
+		$entry_id = (int) $wpdb->insert_id;
+
+		$wpdb->insert( // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery
+			$wpdb->prefix . 'evf_entrymeta',
+			array(
+				'entry_id'   => $entry_id,
+				'meta_key'   => 'file_upload', // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_key
+				'meta_value' => $value, // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_value
+			)
+		);
+
+		wp_cache_delete( $entry_id, 'evf-entry' );
+		wp_cache_delete( $entry_id, 'evf-entrymeta' );
+
+		do_action( 'everest_forms_before_delete_entries', $entry_id );
+	}
+
+	/**
+	 * A Media Library upload is removed, attachment and file, with its entry.
+	 */
+	public function test_media_library_attachment_is_deleted_with_entry() {
+		$attachment_id = $this->create_media_attachment( 'evf-media-own.pdf' );
+		$file          = get_attached_file( $attachment_id );
+
+		$this->delete_entry_with_upload_files(
+			array(
+				array(
+					'value'         => wp_get_attachment_url( $attachment_id ),
+					'attachment_id' => $attachment_id,
+				),
+			)
+		);
+
+		$this->assertNull( get_post( $attachment_id ) );
+		$this->assertFileNotExists( $file );
+	}
+
+	/**
+	 * A stored attachment ID whose URL is not the entry's file leaves that media alone.
+	 */
+	public function test_unrelated_media_attachment_is_not_deleted() {
+		$attachment_id = $this->create_media_attachment( 'evf-media-unrelated.pdf' );
+		$file          = get_attached_file( $attachment_id );
+
+		$this->delete_entry_with_upload_files(
+			array(
+				array(
+					'value'         => 'https://example.com/not-this-attachment.pdf',
+					'attachment_id' => $attachment_id,
+				),
+			)
+		);
+
+		$this->assertNotNull( get_post( $attachment_id ) );
+		$this->assertFileExists( $file );
+
+		wp_delete_attachment( $attachment_id, true );
+	}
+
+	/**
 	 * This form's hashed upload folder, matching EVF_Form_Fields_Upload::get_form_files_dir().
 	 *
 	 * @return string
