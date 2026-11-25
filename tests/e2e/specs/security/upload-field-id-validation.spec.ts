@@ -64,6 +64,115 @@ test('upload endpoint rejects an unknown field_id for a visitor @fresh @security
 /**
  * @area    security
  * @tier    fresh
+ * @source  security audit — upload field file-size lookup used wp_remote_head()
+ * @why     A visitor's submitted upload value is re-rendered as a file preview,
+ *          and the preview's size was read with an unrestricted HEAD request to
+ *          that URL, so an anonymous POST made the server request an internal
+ *          address and print the result. Guards that internal addresses are
+ *          refused (size 0) while the site's own files still report a size; does
+ *          not assert the preview's layout or the upload flow itself.
+ */
+test('upload preview does not fetch internal addresses for a visitor @fresh @security', async ({
+  page,
+  browser,
+  publishedForm,
+}) => {
+  const fieldId = await addFileUploadField(page, publishedForm.formId);
+  const fieldName = `everest_forms[form_fields][${fieldId}]`;
+
+  const site = new URL(publishedForm.url);
+  const internal = new URL(site.origin);
+  internal.hostname = site.hostname === 'localhost' ? '127.0.0.1' : 'localhost';
+  const filePath = '/wp-includes/images/media/text.png';
+
+  const visitor = await browser.newContext();
+  try {
+    const previewSize = async (fileUrl: string) => {
+      const response = await visitor.request.post(publishedForm.url, {
+        form: { 'everest_forms[id]': publishedForm.formId, [fieldName]: fileUrl },
+      });
+      const match = (await response.text()).match(/data-dz-size[^>]*>\s*<strong>([^<]*)</);
+      return match ? match[1].trim() : null;
+    };
+
+    const ownSize = await previewSize(`${site.origin}${filePath}`);
+    expect(
+      ownSize,
+      'The form did not re-render the submitted file as a preview, so the guard proves nothing.',
+    ).not.toBeNull();
+    expect(
+      ownSize,
+      "A file on the site's own host no longer reports a size, so the lookup itself is broken.",
+    ).not.toMatch(/^0(\.0)? B$/);
+
+    const internalSize = await previewSize(`${internal.origin}${filePath}`);
+    expect(
+      internalSize,
+      'The preview for the internal address was not rendered, so the guard proves nothing.',
+    ).not.toBeNull();
+    expect(
+      internalSize,
+      `The upload preview reported a size (${internalSize}) for ${internal.origin}, so the server ` +
+        'made a HEAD request to an internal address on behalf of an anonymous visitor.',
+    ).toMatch(/^0(\.0)? B$/);
+  } finally {
+    await visitor.close();
+  }
+});
+
+/**
+ * @area    security
+ * @tier    fresh
+ * @source  security report — temporary uploads reachable at a public URL
+ * @why     A file uploaded without submitting the form was stored at a public
+ *          URL built from the name the upload request returned, so it could be
+ *          fetched and indexed. Guards that the returned name does not resolve to
+ *          a public tmp URL; does not assert where submitted files end up or that
+ *          the upload itself is refused.
+ */
+test('anonymous upload is not served from a guessable tmp URL @fresh @security', async ({
+  page,
+  browser,
+  publishedForm,
+}) => {
+  const fieldId = await addFileUploadField(page, publishedForm.formId);
+
+  const visitor = await browser.newContext();
+  try {
+    const origin = new URL(publishedForm.url).origin;
+    const upload = await visitor.request.post(`${origin}/wp-admin/admin-ajax.php`, {
+      multipart: {
+        action: 'everest_forms_upload_file',
+        form_id: publishedForm.formId,
+        field_id: fieldId,
+        file: {
+          name: 'evf-qa.pdf',
+          mimeType: 'application/pdf',
+          buffer: Buffer.from('%PDF-1.4\n% evf-qa tmp exposure check\n'),
+        },
+      },
+    });
+    const body = await upload.json().catch(() => null);
+    expect(
+      body?.success,
+      `The anonymous upload was refused (${JSON.stringify(body)}), so the tmp URL check proves nothing.`,
+    ).toBe(true);
+
+    const tmpUrl = `${origin}/wp-content/uploads/everest_forms_uploads/tmp/${body.data.file}`;
+    const served = await visitor.request.get(tmpUrl);
+    expect(
+      served.status(),
+      `An anonymous, unsubmitted upload is publicly served at ${tmpUrl}. ` +
+        'Temporary uploads must not be reachable at a URL derived from the returned name.',
+    ).not.toBe(200);
+  } finally {
+    await visitor.close();
+  }
+});
+
+/**
+ * @area    security
+ * @tier    fresh
  * @source  security report — stored names of submitted uploads
  * @why     Submitted files are renamed to <name>-<suffix>.<ext>. Guards that the
  *          suffix differs per upload, so two uploads of the same file name get
@@ -76,7 +185,7 @@ test('two uploads of the same file name get unrelated stored names @fresh @secur
   publishedForm,
 }) => {
   test.setTimeout(150_000);
-  const fieldId = await addFileUploadFieldForNames(page, publishedForm.formId);
+  const fieldId = await addFileUploadField(page, publishedForm.formId);
 
   for (let i = 0; i < 2; i++) {
     const visitor = await browser.newContext();
@@ -136,7 +245,7 @@ test('two uploads of the same file name get unrelated stored names @fresh @secur
  * Add a File Upload field to the fixture's form through the builder, and save.
  * Returns the id the builder assigned, since the front-end input is named after it.
  */
-async function addFileUploadFieldForNames(page: Page, formId: string): Promise<string> {
+async function addFileUploadField(page: Page, formId: string): Promise<string> {
   await page.goto(`/wp-admin/admin.php?page=evf-builder&tab=fields&form_id=${formId}`, {
     waitUntil: 'domcontentloaded',
   });

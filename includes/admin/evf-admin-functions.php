@@ -568,7 +568,7 @@ function everest_forms_panel_field($option, $panel, $field, $form_data, $label, 
 						$value = '';
 					}
 				} else {
-					$response = wp_remote_head( $value );
+					$response = wp_safe_remote_head( $value );
 
 					// Only a 2xx response is evidence about the resource; a blocked, timed out or
 					// intercepted request must not wipe an already saved image.
