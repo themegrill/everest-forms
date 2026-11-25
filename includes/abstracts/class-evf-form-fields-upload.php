@@ -155,7 +155,7 @@ abstract class EVF_Form_Fields_Upload extends EVF_Form_Fields {
 			$this->get_form_files_dir()['path'],
 		);
 
-		$tmp_path = wp_normalize_path( $this->get_tmp_dir() . '/' . $file );
+		$tmp_path = wp_normalize_path( evf_get_upload_tmp_file_path( $file ) );
 
 		// Validate that the target path is within allowed directories
 		$is_allowed = false;
@@ -236,9 +236,9 @@ abstract class EVF_Form_Fields_Upload extends EVF_Form_Fields {
 			wp_send_json_error( implode( ',', $errors ), 400 );
 		}
 
-		$tmp_dir  = $this->get_tmp_dir();
+		$this->get_tmp_dir();
 		$tmp_name = $this->get_tmp_file_name( $extension );
-		$tmp_path = wp_normalize_path( $tmp_dir . '/' . $tmp_name );
+		$tmp_path = wp_normalize_path( evf_get_upload_tmp_file_path( $tmp_name ) );
 		$tmp      = $this->move_file( $path, $tmp_path );
 
 		if ( ! $tmp ) {
@@ -249,7 +249,7 @@ abstract class EVF_Form_Fields_Upload extends EVF_Form_Fields {
 
 		wp_send_json_success(
 			array(
-				'file' => pathinfo( $tmp, PATHINFO_FILENAME ) . '.' . pathinfo( $tmp, PATHINFO_EXTENSION ),
+				'file' => $tmp_name,
 				'name' => $name_of_file,
 			)
 		);
@@ -506,6 +506,12 @@ abstract class EVF_Form_Fields_Upload extends EVF_Form_Fields {
 
 		if ( ! file_exists( $index ) ) {
 			file_put_contents( $index, '' ); // phpcs:ignore WordPress.WP.AlternativeFunctions
+		}
+
+		$htaccess = trailingslashit( $tmp_root ) . '.htaccess';
+
+		if ( ! file_exists( $htaccess ) ) {
+			file_put_contents( $htaccess, "<IfModule mod_authz_core.c>\n\tRequire all denied\n</IfModule>\n<IfModule !mod_authz_core.c>\n\tOrder deny,allow\n\tDeny from all\n</IfModule>\n<IfModule mod_headers.c>\n\tHeader set X-Robots-Tag \"noindex, nofollow\"\n</IfModule>\n" ); // phpcs:ignore WordPress.WP.AlternativeFunctions
 		}
 
 		return $tmp_root;
@@ -1491,7 +1497,7 @@ abstract class EVF_Form_Fields_Upload extends EVF_Form_Fields {
 	 */
 	protected function generate_file_info( $file ) {
 		$dir              = $this->get_form_files_dir();
-		$file['tmp_path'] = trailingslashit( $this->get_tmp_dir() ) . sanitize_file_name( $file['file'] );
+		$file['tmp_path'] = evf_get_upload_tmp_file_path( $file['file'] );
 		$file['type']     = 'application/octet-stream';
 		if ( is_file( $file['tmp_path'] ) ) {
 			$filetype     = wp_check_filetype( $file['tmp_path'] );

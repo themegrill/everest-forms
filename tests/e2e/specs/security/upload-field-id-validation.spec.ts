@@ -121,6 +121,56 @@ test('upload preview does not fetch internal addresses for a visitor @fresh @sec
 });
 
 /**
+ * @area    security
+ * @tier    fresh
+ * @source  security report — temporary uploads reachable at a public URL
+ * @why     A file uploaded without submitting the form was stored at a public
+ *          URL built from the name the upload request returned, so it could be
+ *          fetched and indexed. Guards that the returned name does not resolve to
+ *          a public tmp URL; does not assert where submitted files end up or that
+ *          the upload itself is refused.
+ */
+test('anonymous upload is not served from a guessable tmp URL @fresh @security', async ({
+  page,
+  browser,
+  publishedForm,
+}) => {
+  const fieldId = await addFileUploadField(page, publishedForm.formId);
+
+  const visitor = await browser.newContext();
+  try {
+    const origin = new URL(publishedForm.url).origin;
+    const upload = await visitor.request.post(`${origin}/wp-admin/admin-ajax.php`, {
+      multipart: {
+        action: 'everest_forms_upload_file',
+        form_id: publishedForm.formId,
+        field_id: fieldId,
+        file: {
+          name: 'evf-qa.pdf',
+          mimeType: 'application/pdf',
+          buffer: Buffer.from('%PDF-1.4\n% evf-qa tmp exposure check\n'),
+        },
+      },
+    });
+    const body = await upload.json().catch(() => null);
+    expect(
+      body?.success,
+      `The anonymous upload was refused (${JSON.stringify(body)}), so the tmp URL check proves nothing.`,
+    ).toBe(true);
+
+    const tmpUrl = `${origin}/wp-content/uploads/everest_forms_uploads/tmp/${body.data.file}`;
+    const served = await visitor.request.get(tmpUrl);
+    expect(
+      served.status(),
+      `An anonymous, unsubmitted upload is publicly served at ${tmpUrl}. ` +
+        'Temporary uploads must not be reachable at a URL derived from the returned name.',
+    ).not.toBe(200);
+  } finally {
+    await visitor.close();
+  }
+});
+
+/**
  * Add a File Upload field to the fixture's form through the builder, and save.
  * Returns the id the builder assigned, since the front-end input is named after it.
  */
