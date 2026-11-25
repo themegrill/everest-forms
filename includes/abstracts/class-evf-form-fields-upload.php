@@ -1516,7 +1516,7 @@ abstract class EVF_Form_Fields_Upload extends EVF_Form_Fields {
 
 		$file['file_name_new'] = apply_filters(
 			'everest_forms_modify_file_name',
-			sprintf('%s-%s.%s', $file_base, wp_hash($dir['path'] . $this->form_data['id'] . $this->field_id), strtolower($file_ext)),
+			sprintf('%s-%s.%s', $file_base, wp_hash(wp_rand() . microtime() . $dir['path'] . $this->form_data['id'] . $this->field_id), strtolower($file_ext)),
 			$file_base,
 			$file_ext
 		);
