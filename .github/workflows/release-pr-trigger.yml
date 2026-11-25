@@ -1,0 +1,95 @@
+# Keeps tg-autopilot's release automation in step with this repo. The work itself runs
+# in themegrill/.github; these jobs only send an event.
+#
+#   merged into pre-develop -> "release-pr":     refresh the "Release" PR (linked issues
+#                                                and public changelog) within seconds.
+#   Release PR merged into develop
+#   (pre-develop -> develop)  -> "release-merged": stamp the version + changelog, tag it
+#                                                and create a DRAFT GitHub Release.
+#                                                It never publishes: publishing the draft
+#                                                is what builds the zip and deploys to
+#                                                wordpress.org, and that stays a person's step.
+#
+#   GitHub Release published -> "release-published": mark the Release PR and every merged PR
+#                                                in it with a "released" label and an
+#                                                "included in version X" comment (issues get
+#                                                the label only). Never fires for a draft.
+#
+# A 6-hourly schedule in themegrill/.github is the safety net if a refresh event is missed.
+# Release publish is safe to re-run: it skips when the tag already exists.
+#
+# To check it after changing anything here: merge a small PR into pre-develop and
+# confirm this workflow runs green and the Release PR refreshes within a minute.
+name: Release automation trigger
+
+on:
+  pull_request:
+    types: [closed]
+    branches: [pre-develop, develop]
+  release:
+    types: [published]
+
+# The jobs use the BOT_TOKEN secret only; the built-in token needs no access.
+permissions: {}
+
+jobs:
+  refresh-release-pr:
+    # Merged (not just closed) into pre-develop, from a branch in this repo: PRs from
+    # forks get no secrets, so they are left to the scheduled run.
+    if: >-
+      github.event.pull_request.merged == true &&
+      github.event.pull_request.base.ref == 'pre-develop' &&
+      github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-latest
+    steps:
+      - name: Send release-pr event
+        env:
+          GH_TOKEN: ${{ secrets.BOT_TOKEN }}
+          TARGET_REPO: ${{ github.repository }}
+        run: |
+          gh api repos/themegrill/.github/dispatches \
+            -f event_type=release-pr \
+            -f "client_payload[repo]=${TARGET_REPO}" \
+          || { echo "::error::Could not send the release-pr event. The Release PR will still refresh on tg-autopilot's scheduled run."; exit 1; }
+
+  publish-release:
+    # Only the Release PR itself: pre-develop merged into develop, from this repo.
+    if: >-
+      github.event.pull_request.merged == true &&
+      github.event.pull_request.base.ref == 'develop' &&
+      github.event.pull_request.head.ref == 'pre-develop' &&
+      github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-latest
+    steps:
+      - name: Send release-merged event
+        env:
+          GH_TOKEN: ${{ secrets.BOT_TOKEN }}
+          TARGET_REPO: ${{ github.repository }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+        run: |
+          gh api repos/themegrill/.github/dispatches \
+            -f event_type=release-merged \
+            -f "client_payload[repo]=${TARGET_REPO}" \
+            -f "client_payload[pr]=${PR_NUMBER}" \
+          || { echo "::error::Could not send the release-merged event. Run 'Release publish' in themegrill/.github by hand with repo=${TARGET_REPO}, pr=${PR_NUMBER}, apply=true."; exit 1; }
+
+  announce-release:
+    # A published release (GitHub does not fire "published" for a draft), not a pre-release.
+    # The existing push-deploy and build-release workflows also run on this event; this one
+    # is independent of them and only sends a message.
+    if: >-
+      github.event_name == 'release' &&
+      github.event.release.prerelease == false
+    runs-on: ubuntu-latest
+    steps:
+      - name: Send release-published event
+        env:
+          GH_TOKEN: ${{ secrets.BOT_TOKEN }}
+          TARGET_REPO: ${{ github.repository }}
+          RELEASE_TAG: ${{ github.event.release.tag_name }}
+        run: |
+          gh api repos/themegrill/.github/dispatches \
+            -f event_type=release-published \
+            -f "client_payload[repo]=${TARGET_REPO}" \
+            -f "client_payload[tag]=${RELEASE_TAG}" \
+          || { echo "::error::Could not send the release-published event. Run 'Release announce' in themegrill/.github by hand with repo=${TARGET_REPO}, tag=${RELEASE_TAG}, apply=true."; exit 1; }

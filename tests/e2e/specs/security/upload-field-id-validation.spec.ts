@@ -64,6 +64,65 @@ test('upload endpoint rejects an unknown field_id for a visitor @fresh @security
 /**
  * @area    security
  * @tier    fresh
+ * @source  security audit — upload field file-size lookup used wp_remote_head()
+ * @why     A visitor's submitted upload value is re-rendered as a file preview,
+ *          and the preview's size was read with an unrestricted HEAD request to
+ *          that URL, so an anonymous POST made the server request an internal
+ *          address and print the result. Guards that internal addresses are
+ *          refused (size 0) while the site's own files still report a size; does
+ *          not assert the preview's layout or the upload flow itself.
+ */
+test('upload preview does not fetch internal addresses for a visitor @fresh @security', async ({
+  page,
+  browser,
+  publishedForm,
+}) => {
+  const fieldId = await addFileUploadField(page, publishedForm.formId);
+  const fieldName = `everest_forms[form_fields][${fieldId}]`;
+
+  const site = new URL(publishedForm.url);
+  const internal = new URL(site.origin);
+  internal.hostname = site.hostname === 'localhost' ? '127.0.0.1' : 'localhost';
+  const filePath = '/wp-includes/images/media/text.png';
+
+  const visitor = await browser.newContext();
+  try {
+    const previewSize = async (fileUrl: string) => {
+      const response = await visitor.request.post(publishedForm.url, {
+        form: { 'everest_forms[id]': publishedForm.formId, [fieldName]: fileUrl },
+      });
+      const match = (await response.text()).match(/data-dz-size[^>]*>\s*<strong>([^<]*)</);
+      return match ? match[1].trim() : null;
+    };
+
+    const ownSize = await previewSize(`${site.origin}${filePath}`);
+    expect(
+      ownSize,
+      'The form did not re-render the submitted file as a preview, so the guard proves nothing.',
+    ).not.toBeNull();
+    expect(
+      ownSize,
+      "A file on the site's own host no longer reports a size, so the lookup itself is broken.",
+    ).not.toMatch(/^0(\.0)? B$/);
+
+    const internalSize = await previewSize(`${internal.origin}${filePath}`);
+    expect(
+      internalSize,
+      'The preview for the internal address was not rendered, so the guard proves nothing.',
+    ).not.toBeNull();
+    expect(
+      internalSize,
+      `The upload preview reported a size (${internalSize}) for ${internal.origin}, so the server ` +
+        'made a HEAD request to an internal address on behalf of an anonymous visitor.',
+    ).toMatch(/^0(\.0)? B$/);
+  } finally {
+    await visitor.close();
+  }
+});
+
+/**
+ * @area    security
+ * @tier    fresh
  * @source  security report — temporary uploads reachable at a public URL
  * @why     A file uploaded without submitting the form was stored at a public
  *          URL built from the name the upload request returned, so it could be
@@ -76,7 +135,7 @@ test('anonymous upload is not served from a guessable tmp URL @fresh @security',
   browser,
   publishedForm,
 }) => {
-  const fieldId = await addUploadFieldToForm(page, publishedForm.formId);
+  const fieldId = await addFileUploadField(page, publishedForm.formId);
 
   const visitor = await browser.newContext();
   try {
@@ -113,9 +172,9 @@ test('anonymous upload is not served from a guessable tmp URL @fresh @security',
 
 /**
  * Add a File Upload field to the fixture's form through the builder, and save.
- * Returns the id the builder assigned, since uploads are addressed by it.
+ * Returns the id the builder assigned, since the front-end input is named after it.
  */
-async function addUploadFieldToForm(page: Page, formId: string): Promise<string> {
+async function addFileUploadField(page: Page, formId: string): Promise<string> {
   await page.goto(`/wp-admin/admin.php?page=evf-builder&tab=fields&form_id=${formId}`, {
     waitUntil: 'domcontentloaded',
   });
@@ -132,7 +191,7 @@ async function addUploadFieldToForm(page: Page, formId: string): Promise<string>
     timeout: 30_000,
   });
   const fieldId = await field.getAttribute('data-field-id');
-  expect(fieldId, 'The new File Upload field has no field id to upload against.').toBeTruthy();
+  expect(fieldId, 'The new File Upload field has no field id to submit against.').toBeTruthy();
 
   await page.locator('.everest-forms-save-button').first().click();
   await expect(

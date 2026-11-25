@@ -1296,7 +1296,7 @@ abstract class EVF_Form_Fields_Upload extends EVF_Form_Fields {
 
 		// Try remote URL as last resort
 		if ( filter_var( $file_path, FILTER_VALIDATE_URL ) ) {
-			$response = wp_remote_head( $file_path );
+			$response = wp_safe_remote_head( $file_path );
 			if ( ! is_wp_error( $response ) && isset( $response['headers']['content-length'] ) ) {
 				return (int) $response['headers']['content-length'];
 			}
