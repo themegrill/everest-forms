@@ -32,7 +32,7 @@ final class Loader {
 	 *
 	 * @var string $version The class version.
 	 */
-	private static $version = '1.0.4';
+	private static $version = '1.0.5';
 	/**
 	 * Holds registered products.
 	 *
@@ -62,9 +62,10 @@ final class Loader {
 	public static $labels = [
 		'announcements' => [
 			'notice_link_label' => 'See the Offer',
-			'max_savings'       => 'Our biggest sale of the year: <strong>%s OFF everything!</strong>  Don\'t miss this limited-time offer.',
+			'max_savings'       => 'Our biggest sale of the year: <strong>Up to %s OFF on our products!</strong>  Don\'t miss this limited-time offer.',
 			'black_friday'      => 'Black Friday Sale',
 			'time_left'         => '%s left',
+			'dont_show_again'   => 'Don\'t show again',
 		],
 		'uninstall'     => [
 			'heading_plugin' => 'What\'s wrong?',
