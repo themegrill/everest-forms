@@ -23,7 +23,12 @@ use ThemeGrillSDK\Product;
  */
 class Announcements extends AbstractModule {
 
-	const SALE_DURATION_BLACK_FRIDAY = '+7 days'; // DateTime modifier. (Include Cyber Monday)
+	const SALE_DURATION_BLACK_FRIDAY = '+11 days'; // DateTime modifier, runs through Cyber Week.
+
+	/**
+	 * Days to hide the notice after it is closed, before showing it again.
+	 */
+	const SNOOZE_DAYS = 2;
 
 	/**
 	 * Mark if the notice was already loaded.
@@ -121,13 +126,13 @@ class Announcements extends AbstractModule {
 		$current_year                  = $current_date->format( 'Y' );
 		$user_notice_dismiss_timestamp = get_user_meta( $user_id, 'themegrill_sdk_dismissed_notice_black_friday', true );
 
-		if ( empty( $user_notice_dismiss_timestamp ) ) {
-			return true;
+		if ( ! empty( $user_notice_dismiss_timestamp ) && wp_date( 'Y', $user_notice_dismiss_timestamp ) === $current_year ) {
+			return false;
 		}
 
-		$dismissed_year = wp_date( 'Y', $user_notice_dismiss_timestamp );
+		$user_notice_snooze_timestamp = (int) get_user_meta( $user_id, 'themegrill_sdk_snoozed_notice_black_friday', true );
 
-		return $current_year !== $dismissed_year;
+		return ( $current_date->getTimestamp() - $user_notice_snooze_timestamp ) >= self::SNOOZE_DAYS * DAY_IN_SECONDS;
 	}
 
 	/**
@@ -192,11 +197,11 @@ class Announcements extends AbstractModule {
 		$sale_url   = apply_filters( 'themegrill_sdk_announcements_sale_url', '' );
 		$sale_url   = tgsdk_utmify(
 			apply_filters( 'themegrill_sdk_black_friday_url', 'https://themegrill.com/blackfriday/' ),
-			apply_filters( 'themegrill_sdk_black_friday_campaign_name', 'bfcm25' ),
+			apply_filters( 'themegrill_sdk_black_friday_campaign_name', 'bfcm' . $this->get_current_date()->format( 'y' ) ),
 			$utm_location
 		);
 
-		$sale_message = sprintf( Loader::$labels['announcements']['max_savings'], '50%' );
+		$sale_message = sprintf( Loader::$labels['announcements']['max_savings'], '45%' );
 
 		return array(
 			'title'     => $sale_title,
@@ -260,6 +265,7 @@ class Announcements extends AbstractModule {
 			),
 			'dismiss_themegrill_event_notice'
 		);
+		$dont_show_again_url = add_query_arg( 'permanent', '1', $dismiss_notice_url );
 
 		if ( empty( $sale_url ) ) {
 			return;
@@ -299,6 +305,14 @@ class Announcements extends AbstractModule {
 				background: #0466CB;
 				color: white;
 				font-weight: 700;
+			}
+			.themegrill-sale p a.themegrill-sale-dont-show {
+				margin-left: 6px;
+				padding: 0;
+				background: none;
+				color: #787c82;
+				font-weight: 400;
+				text-decoration: underline;
 			}
 			.themegrill-sale-dismiss {
 				padding-top: 5px;
@@ -346,7 +360,9 @@ class Announcements extends AbstractModule {
 				<div class="themegrill-sale-logo">
 					<img
 						width="45"
+						height="45"
 						src="<?php echo esc_url( $this->get_sdk_uri() . 'assets/images/themegrill-logo.png' ); ?>"
+						alt="ThemeGrill"
 					/>
 				</div>
 				<div class="themegrill-sale-content">
@@ -358,6 +374,11 @@ class Announcements extends AbstractModule {
 					</h4>
 					<p>
 						<?php echo wp_kses_post( $data['message'] ); ?>
+						<?php if ( $can_dismiss ) : ?>
+						<a href="<?php echo esc_url( $dont_show_again_url ); ?>" class="themegrill-sale-dont-show">
+							<?php echo esc_html( Loader::$labels['announcements']['dont_show_again'] ); ?>
+						</a>
+						<?php endif; ?>
 					</p>
 				</div>
 				<div class="themegrill-sale-action">
@@ -403,7 +424,11 @@ class Announcements extends AbstractModule {
 	public function disable_notification_ajax() {
 		check_ajax_referer( 'dismiss_themegrill_event_notice' );
 
-		update_user_meta( get_current_user_id(), 'themegrill_sdk_dismissed_notice_black_friday', $this->get_current_date()->getTimestamp() );
+		$meta_key = ( isset( $_GET['permanent'] ) && '1' === sanitize_key( wp_unslash( $_GET['permanent'] ) ) )
+			? 'themegrill_sdk_dismissed_notice_black_friday'
+			: 'themegrill_sdk_snoozed_notice_black_friday';
+
+		update_user_meta( get_current_user_id(), $meta_key, $this->get_current_date()->getTimestamp() );
 
 		$return_page_url = wp_get_referer();
 		if ( empty( $return_page_url ) ) {

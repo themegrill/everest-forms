@@ -101,9 +101,13 @@ abstract class AbstractModule {
 		 * $themegrill_sdk_max_path can point to the theme when the theme version is higher.
 		 * hence we also need to check that the path does not point to the theme else this will break the URL.
 		 * References: https://github.com/Codeinwp/neve-pro-addon/issues/2403
+		 *
+		 * Normalize both paths to forward slashes before comparison — __DIR__ returns backslashes
+		 * on Windows while get_template_directory() uses forward slashes, making strpos() fail.
 		 */
-		if ( ( $this->product->is_plugin() || $this->product->is_theme() ) && false === strpos( $themegrill_sdk_max_path, get_template_directory() ) ) {
-			return plugins_url( '/', $themegrill_sdk_max_path . '/themegrill-sdk/' );
+		$normalized_sdk_path = wp_normalize_path( $themegrill_sdk_max_path );
+		if ( ( $this->product->is_plugin() || $this->product->is_theme() ) && false === strpos( $normalized_sdk_path, wp_normalize_path( get_template_directory() ) ) ) {
+			return plugins_url( '/', $normalized_sdk_path . '/load.php' );
 		}
 
 		return get_template_directory_uri() . '/vendor/themegrill/themegrill-sdk/';
