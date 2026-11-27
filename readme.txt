@@ -350,7 +350,7 @@ You can report security bugs through the Patchstack Vulnerability Disclosure Pro
 == Changelog ==
 
 = 3.6.6       - 27-11-2026
-* Tweak 	  - Black Friday notice now runs until December 4 with a snooze option.
+* Tweak 	  - Updated ThemeGrill SDK to version 1.0.6.
 = 3.6.5       - 19-11-2026
 * Fix 		  - Improved security of file deletion when deleting form entries.
 * Fix 		  - Improved security of coupon data handling on form submission.
