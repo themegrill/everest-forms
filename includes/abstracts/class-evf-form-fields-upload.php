@@ -38,6 +38,13 @@ abstract class EVF_Form_Fields_Upload extends EVF_Form_Fields {
 	protected $request_files = array();
 
 	/**
+	 * Media Library attachment IDs created during this request.
+	 *
+	 * @var array
+	 */
+	protected $request_attachments = array();
+
+	/**
 	 * Hook in tabs.
 	 */
 	public function init_hooks() {
@@ -1391,6 +1398,10 @@ abstract class EVF_Form_Fields_Upload extends EVF_Form_Fields {
 					$file['path'] = $file['tmp_path'];
 
 					$file = $this->generate_file_attachment( $file );
+
+					if ( ! empty( $file['attachment_id'] ) ) {
+						$this->request_attachments[] = absint( $file['attachment_id'] );
+					}
 				} elseif (
 					! isset( $file['external'] )
 					&& file_exists( $file['tmp_path'] )
@@ -1693,7 +1704,12 @@ abstract class EVF_Form_Fields_Upload extends EVF_Form_Fields {
 				wp_delete_file( $file_path );
 			}
 
-			$this->request_files = array();
+			foreach ( $this->request_attachments as $attachment_id ) {
+				wp_delete_attachment( $attachment_id, true );
+			}
+
+			$this->request_files       = array();
+			$this->request_attachments = array();
 		}
 
 		if ( ! $entry_id ) {

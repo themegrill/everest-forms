@@ -2341,6 +2341,21 @@ class EVF_Form_Task {
 				}
 			}
 		}
+
+		$entry_fields = ! empty( $get_entry->fields ) ? evf_decode( $get_entry->fields ) : array();
+		foreach ( (array) $entry_fields as $entry_field ) {
+			$meta_key = isset( $entry_field['meta_key'] ) ? $entry_field['meta_key'] : '';
+			if ( ! isset( $field_types[ $meta_key ] ) || ! in_array( $field_types[ $meta_key ], array( 'file-upload', 'image-upload' ), true ) || empty( $entry_field['value_raw'] ) || ! is_array( $entry_field['value_raw'] ) ) {
+				continue;
+			}
+
+			foreach ( $entry_field['value_raw'] as $file ) {
+				$attachment_id = isset( $file['attachment_id'] ) ? absint( $file['attachment_id'] ) : 0;
+				if ( $attachment_id && isset( $file['value'] ) && 'attachment' === get_post_type( $attachment_id ) && wp_get_attachment_url( $attachment_id ) === $file['value'] ) {
+					wp_delete_attachment( $attachment_id, true );
+				}
+			}
+		}
 	}
 
 	/**
