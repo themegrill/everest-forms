@@ -15,7 +15,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 // Current SDK version and path.
-$themegrill_sdk_version = '1.0.4';
+$themegrill_sdk_version = '1.0.6';
 $themegrill_sdk_path    = __DIR__;
 
 global $themegrill_sdk_max_version;
