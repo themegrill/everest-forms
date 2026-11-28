@@ -83,7 +83,7 @@ abstract class EVF_Form_Fields_Upload extends EVF_Form_Fields {
 						evf_max_upload()
 					),
 				),
-				'max_timeout'     => apply_filters( 'evf_fileupload_max_timeout', absint( 30000 ) ),
+				'max_timeout'     => apply_filters( 'evf_fileupload_max_timeout', 0 ),
 				'loading_message' => esc_html__( 'Do not submit the form until the upload process is finished', 'everest-forms' ),
 			)
 		);
