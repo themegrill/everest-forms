@@ -427,12 +427,12 @@ class EVF_Entry_CSV_Exporter extends EVF_CSV_Exporter {
 							$likert_columns = $form_field['likert_columns'];
 							$likert_rows    = $form_field['likert_rows'];
 							$likert_answers = ! empty( $fields[ $column_id ]['value_raw'] ) && is_array( $fields[ $column_id ]['value_raw'] ) ? $fields[ $column_id ]['value_raw'] : array();
-							$is_select      = isset( $form_field['input_type'] ) && 'select' === $form_field['input_type'];
 							foreach ( (array) $likert_rows as $row_key => $row_label ) {
 								$row_answer = isset( $likert_answers[ $row_key ] ) ? $likert_answers[ $row_key ] : '';
 								$row_labels = array();
+								$is_text    = is_array( $row_answer ) && array_keys( $row_answer ) !== range( 0, count( $row_answer ) - 1 );
 								foreach ( (array) $row_answer as $answer_value ) {
-									$label = $is_select ? $answer_value : ( isset( $likert_columns[ $answer_value ] ) ? $likert_columns[ $answer_value ] : '' );
+									$label = $is_text ? $answer_value : ( is_scalar( $answer_value ) && isset( $likert_columns[ $answer_value ] ) ? $likert_columns[ $answer_value ] : '' );
 									if ( is_scalar( $label ) && '' !== (string) $label ) {
 										$row_labels[] = $label;
 									}
