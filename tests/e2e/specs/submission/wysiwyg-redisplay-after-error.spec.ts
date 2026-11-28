@@ -8,16 +8,16 @@ import type { Page } from '@playwright/test';
  * When a submission failed a server-side check, the WYSIWYG editor was filled
  * with the visitor's HTML escaped twice, so it showed `<strong>…</strong>` as
  * text, and resubmitting saved the tags as text. Attribute quotes inside the
- * redisplayed editor were also turned into curly quotes, breaking links.
+ * redisplayed editor were also turned into curly quotes, breaking links, and
+ * text typed as a literal tag must stay text.
  *
- * Does not assert the saved entry, or AJAX submission (which does not
- * redisplay the form).
+ * Does not assert AJAX submission (which does not redisplay the form).
  */
 
 test.setTimeout(150_000);
 
 const CONTENT =
-  '<p>evf-qa <strong>evf-qa-bold</strong>, don\'t <a href="https://example.com/evf-qa">evf-qa-link</a></p>';
+  '<p>evf-qa <strong>evf-qa-bold</strong>, don\'t <a href="https://example.com/evf-qa">evf-qa-link</a> &lt;em&gt;evf-qa-literal&lt;/em&gt;</p>';
 
 /**
  * @area    submission
@@ -101,10 +101,68 @@ test('a Rich Text answer keeps its formatting after a server-side validation err
       'The link came back broken (quotes changed or escaped) after the validation error.',
     ).toContain('href="https://example.com/evf-qa"');
     expect(shown?.text, 'The apostrophe was changed after the validation error.').toContain("don't");
+    expect(
+      shown?.text,
+      'Text typed as a literal tag turned into formatting after the validation error.',
+    ).toContain('<em>evf-qa-literal</em>');
+
+    // Fix the other fields and submit the redisplayed form as it is.
+    await fillOtherFields(vp, fieldId);
+    const resubmit = vp.waitForNavigation({ waitUntil: 'domcontentloaded', timeout: 30_000 });
+    await vp.evaluate(() => {
+      (window as unknown as { tinymce: { triggerSave: () => void } }).tinymce.triggerSave();
+      const form = document.querySelector<HTMLFormElement>('form.everest-form');
+      if (form) HTMLFormElement.prototype.submit.call(form);
+    });
+    await resubmit;
   } finally {
     await visitor.close();
   }
+
+  await page.goto(`/wp-admin/admin.php?page=evf-entries&form_id=${publishedForm.formId}`, {
+    waitUntil: 'domcontentloaded',
+  });
+  const entryLink = page.locator('a[href*="view-entry="]').first();
+  await expect(entryLink, 'The corrected resubmission did not create an entry.').toBeAttached({
+    timeout: 30_000,
+  });
+  await page.goto((await entryLink.getAttribute('href')) as string, { waitUntil: 'domcontentloaded' });
+
+  const value = page.locator('.evf-field-value').filter({ hasText: 'evf-qa-bold' }).first();
+  await expect(value, 'The Rich Text answer is missing from the saved entry.').toBeVisible({ timeout: 30_000 });
+  await expect(
+    value.locator('strong', { hasText: 'evf-qa-bold' }),
+    'The saved entry lost the bold formatting (or stored the tags as text).',
+  ).toBeVisible();
+  await expect(
+    value.locator('a[href="https://example.com/evf-qa"]'),
+    'The saved entry lost the link.',
+  ).toBeVisible();
+  expect(await value.innerText(), 'The saved entry shows HTML tags as text.').not.toContain('<strong>');
 });
+
+/**
+ * Fill the template's own text inputs so the resubmission is accepted.
+ */
+async function fillOtherFields(vp: Page, wysiwygId: string): Promise<void> {
+  const inputs = vp.locator(
+    'form.everest-form input[type="text"], form.everest-form input[type="email"], ' +
+      'form.everest-form input[type="url"], form.everest-form input[type="tel"], ' +
+      'form.everest-form textarea',
+  );
+
+  for (let i = 0; i < (await inputs.count()); i++) {
+    const field = inputs.nth(i);
+    const name = (await field.getAttribute('name')) ?? '';
+    if (name.includes(`[${wysiwygId}]`) || name === 'everest_forms[hp]' || !(await field.isVisible())) {
+      continue;
+    }
+    const type = await field.getAttribute('type');
+    await field.fill(type === 'email' ? 'evf-qa@example.com' : 'evf-qa').catch(() => {
+      /* A read-only template field is not this guard's concern. */
+    });
+  }
+}
 
 /**
  * Add a WYSIWYG field to the form in the builder and save it.

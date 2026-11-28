@@ -142,10 +142,13 @@ class EVF_Field_Wysiwyg extends EVF_Form_Fields {
 		 * @param array $form_data All Form Data.
 		 */
 	public function field_display( $field, $field_atts, $form_data ) {
-		$value = '';
+		$value  = '';
+		$posted = isset( $_POST['everest_forms']['id'], $_POST['everest_forms']['form_fields'][ $field['id'] ], $form_data['id'] ) && absint( $_POST['everest_forms']['id'] ) === absint( $form_data['id'] ) ? wp_unslash( $_POST['everest_forms']['form_fields'][ $field['id'] ] ) : null; // phpcs:ignore WordPress.Security.NonceVerification.Missing, WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
 
-		if ( isset( $field['properties']['inputs']['primary']['attr']['value'] ) && is_string( $field['properties']['inputs']['primary']['attr']['value'] ) ) {
-			$value = evf_sanitize_wysiwyg( wp_specialchars_decode( $field['properties']['inputs']['primary']['attr']['value'], ENT_QUOTES ) );
+		if ( is_string( $posted ) ) {
+			$value = evf_sanitize_wysiwyg( $posted );
+		} elseif ( isset( $field['properties']['inputs']['primary']['attr']['value'] ) ) {
+			$value = evf_sanitize_textarea_field( $field['properties']['inputs']['primary']['attr']['value'] );
 		}
 
 		$this->display_editor( $field, $form_data, $value );
