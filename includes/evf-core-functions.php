@@ -4878,6 +4878,26 @@ function evf_sanitize_entry($entry = array())
 				case 'repeater-fields':
 					$entry['form_fields'][$key] = $entry['form_fields'][$key];
 					break;
+				case 'likert':
+					if ( ! is_array( $entry['form_fields'][ $key ] ) ) {
+						$entry['form_fields'][ $key ] = sanitize_text_field( $entry['form_fields'][ $key ] );
+						break;
+					}
+
+					$likert = array();
+					foreach ( $entry['form_fields'][ $key ] as $row_key => $row_value ) {
+						$row_key = sanitize_text_field( $row_key );
+						if ( is_array( $row_value ) ) {
+							$likert[ $row_key ] = array();
+							foreach ( $row_value as $answer_key => $answer ) {
+								$likert[ $row_key ][ sanitize_text_field( $answer_key ) ] = is_scalar( $answer ) ? sanitize_text_field( $answer ) : '';
+							}
+						} else {
+							$likert[ $row_key ] = sanitize_text_field( $row_value );
+						}
+					}
+					$entry['form_fields'][ $key ] = $likert;
+					break;
 				default:
 					if (is_array($entry['form_fields'][$key])) {
 						foreach ($entry['form_fields'][$key] as $field_key => $value) {
