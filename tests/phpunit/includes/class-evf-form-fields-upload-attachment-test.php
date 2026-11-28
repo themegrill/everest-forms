@@ -283,6 +283,11 @@ class EVF_Form_Fields_Upload_Attachment_Test extends WP_UnitTestCase {
 		$property->setValue( $this->field, $attachment_ids );
 
 		$this->field->remove_csv_file_after_email_send( array(), array(), array( 'settings' => array( 'disabled_entries' => $disabled_entries ) ), 'entry-email', 'connection_1', 0 );
+
+		if ( has_action( 'shutdown', array( $this->field, 'delete_request_attachments' ) ) ) {
+			remove_action( 'shutdown', array( $this->field, 'delete_request_attachments' ) );
+			$this->field->delete_request_attachments();
+		}
 	}
 
 	/**
@@ -316,6 +321,64 @@ class EVF_Form_Fields_Upload_Attachment_Test extends WP_UnitTestCase {
 
 		$this->assertNull( get_post( $attachment_id ) );
 		$this->assertFileNotExists( $file );
+	}
+
+	/**
+	 * With entry storage disabled, the attachment is deleted at shutdown, not right after the email.
+	 */
+	public function test_request_media_attachment_deletion_waits_for_shutdown() {
+		$attachment_id = $this->create_media_attachment( 'evf-media-deferred.pdf' );
+
+		$property = new ReflectionProperty( 'EVF_Field_File_Upload', 'request_attachments' );
+		$property->setAccessible( true );
+		$property->setValue( $this->field, array( $attachment_id ) );
+
+		$this->field->remove_csv_file_after_email_send( array(), array(), array( 'settings' => array( 'disabled_entries' => '1' ) ), 'entry-email', 'connection_1', 0 );
+
+		$this->assertNotNull( get_post( $attachment_id ) );
+		$this->assertNotFalse( has_action( 'shutdown', array( $this->field, 'delete_request_attachments' ) ) );
+
+		remove_action( 'shutdown', array( $this->field, 'delete_request_attachments' ) );
+		$this->field->delete_request_attachments();
+
+		$this->assertNull( get_post( $attachment_id ) );
+	}
+
+	/**
+	 * With entry storage disabled, an attachment set as a post's featured image is kept.
+	 */
+	public function test_request_media_attachment_used_as_featured_image_is_kept() {
+		$attachment_id = $this->create_media_attachment( 'evf-media-featured.pdf' );
+		$file          = get_attached_file( $attachment_id );
+		$post_id       = self::factory()->post->create();
+		update_post_meta( $post_id, '_thumbnail_id', $attachment_id );
+
+		$this->run_email_cleanup( array( $attachment_id ), '1' );
+
+		$this->assertNotNull( get_post( $attachment_id ) );
+		$this->assertFileExists( $file );
+
+		wp_delete_attachment( $attachment_id, true );
+	}
+
+	/**
+	 * With entry storage disabled, an attachment attached to a post is kept.
+	 */
+	public function test_request_media_attachment_attached_to_post_is_kept() {
+		$attachment_id = $this->create_media_attachment( 'evf-media-attached.pdf' );
+		$post_id       = self::factory()->post->create();
+		wp_update_post(
+			array(
+				'ID'          => $attachment_id,
+				'post_parent' => $post_id,
+			)
+		);
+
+		$this->run_email_cleanup( array( $attachment_id ), '1' );
+
+		$this->assertNotNull( get_post( $attachment_id ) );
+
+		wp_delete_attachment( $attachment_id, true );
 	}
 
 	/**

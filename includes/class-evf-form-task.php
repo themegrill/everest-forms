@@ -2351,7 +2351,7 @@ class EVF_Form_Task {
 
 			foreach ( $entry_field['value_raw'] as $file ) {
 				$attachment_id = isset( $file['attachment_id'] ) ? absint( $file['attachment_id'] ) : 0;
-				if ( $attachment_id && isset( $file['value'] ) && 'attachment' === get_post_type( $attachment_id ) && wp_get_attachment_url( $attachment_id ) === $file['value'] ) {
+				if ( $attachment_id && isset( $file['value'] ) && 'attachment' === get_post_type( $attachment_id ) && wp_get_attachment_url( $attachment_id ) === $file['value'] && ! evf_is_attachment_in_use( $attachment_id ) ) {
 					wp_delete_attachment( $attachment_id, true );
 				}
 			}

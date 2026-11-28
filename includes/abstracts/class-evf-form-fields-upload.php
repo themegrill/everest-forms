@@ -1681,6 +1681,21 @@ abstract class EVF_Form_Fields_Upload extends EVF_Form_Fields {
 	}
 
 	/**
+	 * Delete Media Library attachments uploaded in this request that nothing else uses.
+	 *
+	 * @since x.x.x
+	 */
+	public function delete_request_attachments() {
+		foreach ( $this->request_attachments as $attachment_id ) {
+			if ( ! evf_is_attachment_in_use( $attachment_id ) ) {
+				wp_delete_attachment( $attachment_id, true );
+			}
+		}
+
+		$this->request_attachments = array();
+	}
+
+	/**
 	 * Remove CSV file attachment after email sent.
 	 *
 	 * @param string  $attachment    Attachment enable parameter.
@@ -1698,12 +1713,11 @@ abstract class EVF_Form_Fields_Upload extends EVF_Form_Fields {
 				wp_delete_file( $file_path );
 			}
 
-			foreach ( $this->request_attachments as $attachment_id ) {
-				wp_delete_attachment( $attachment_id, true );
+			if ( ! empty( $this->request_attachments ) ) {
+				add_action( 'shutdown', array( $this, 'delete_request_attachments' ) );
 			}
 
-			$this->request_files       = array();
-			$this->request_attachments = array();
+			$this->request_files = array();
 		}
 
 		if ( ! $entry_id ) {

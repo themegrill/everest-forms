@@ -329,6 +329,31 @@ class EVF_Form_Task_Entry_Delete_Test extends WP_UnitTestCase {
 	}
 
 	/**
+	 * A Media Library upload set as a post's featured image survives deleting its entry.
+	 */
+	public function test_media_library_attachment_used_as_featured_image_is_kept() {
+		$attachment_id = $this->create_media_attachment( 'evf-media-featured.pdf' );
+		$file          = get_attached_file( $attachment_id );
+		$post_id       = self::factory()->post->create();
+		update_post_meta( $post_id, '_thumbnail_id', $attachment_id );
+
+		$this->delete_entry_with_upload_files(
+			array(
+				array(
+					'value'         => wp_get_attachment_url( $attachment_id ),
+					'attachment_id' => $attachment_id,
+				),
+			)
+		);
+
+		$this->assertNotNull( get_post( $attachment_id ) );
+		$this->assertFileExists( $file );
+		$this->assertSame( $attachment_id, (int) get_post_thumbnail_id( $post_id ) );
+
+		wp_delete_attachment( $attachment_id, true );
+	}
+
+	/**
 	 * A stored attachment ID whose URL is not the entry's file leaves that media alone.
 	 */
 	public function test_unrelated_media_attachment_is_not_deleted() {

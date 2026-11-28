@@ -5732,3 +5732,20 @@ function evf_form_confirmation_backward_compatibility($form_data)
 
 	return $form_data;
 }
+
+/**
+ * Whether a Media Library attachment is still used by a post, as its featured image or attached to it.
+ *
+ * @since x.x.x
+ *
+ * @param int $attachment_id Attachment ID.
+ * @return bool
+ */
+function evf_is_attachment_in_use( $attachment_id ) {
+	global $wpdb;
+
+	$attachment_id = absint( $attachment_id );
+	$in_use        = $attachment_id && ( wp_get_post_parent_id( $attachment_id ) || $wpdb->get_var( $wpdb->prepare( "SELECT post_id FROM {$wpdb->postmeta} WHERE meta_key = '_thumbnail_id' AND meta_value = %d LIMIT 1", $attachment_id ) ) ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery
+
+	return (bool) apply_filters( 'everest_forms_is_attachment_in_use', $in_use, $attachment_id );
+}
