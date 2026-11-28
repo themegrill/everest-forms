@@ -144,8 +144,8 @@ class EVF_Field_Wysiwyg extends EVF_Form_Fields {
 	public function field_display( $field, $field_atts, $form_data ) {
 		$value = '';
 
-		if ( isset( $field['properties']['inputs']['primary']['attr']['value'] ) ) {
-			$value = evf_sanitize_textarea_field( $field['properties']['inputs']['primary']['attr']['value'] );
+		if ( isset( $field['properties']['inputs']['primary']['attr']['value'] ) && is_string( $field['properties']['inputs']['primary']['attr']['value'] ) ) {
+			$value = evf_sanitize_wysiwyg( wp_specialchars_decode( $field['properties']['inputs']['primary']['attr']['value'], ENT_QUOTES ) );
 		}
 
 		$this->display_editor( $field, $form_data, $value );
@@ -199,14 +199,14 @@ class EVF_Field_Wysiwyg extends EVF_Form_Fields {
 			'editor_class'  => 'evf-wysiwyg ' . implode( ' ', $primary['class'] ),
 			'textarea_name' => $primary['attr']['name'],
 		);
-		$encode_brackets = static function ( $content ) {
-			return str_replace( array( '[', ']' ), array( '&#91;', '&#93;' ), $content );
+		$encode_content = static function ( $content ) {
+			return str_replace( array( '[', ']', '"', "'" ), array( '&#91;', '&#93;', '&quot;', '&#039;' ), $content );
 		};
-		add_filter( 'the_editor_content', $encode_brackets, 99 );
+		add_filter( 'the_editor_content', $encode_content, 99 );
 		ob_start();
 		wp_editor( $value, $primary['id'], $settings );
 		$output = ob_get_clean();
-		remove_filter( 'the_editor_content', $encode_brackets, 99 );
+		remove_filter( 'the_editor_content', $encode_content, 99 );
 		echo $output; //phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
 		printf( '</div>' );
 	}
