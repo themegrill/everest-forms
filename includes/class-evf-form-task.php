@@ -1895,7 +1895,11 @@ class EVF_Form_Task {
 			wp_die( esc_html__( 'This approval link is invalid or has already been used.', 'everest-forms' ), '', array( 'response' => 403, 'back_link' => true ) );
 		}
 
-		$evf_admin_approval_approved = $wpdb->query( $wpdb->prepare( "UPDATE {$wpdb->prefix}evf_entries SET status = %s WHERE entry_id = %d ", 'publish', $evf_admin_entry_id ) );
+		// Invalidate both the approve and deny links for this entry before acting on it.
+		unset( $evf_admin_entry_saved_token[ $evf_approval_key ], $evf_admin_entry_saved_token[ 'denial_token_' . $evf_admin_entry_id ] );
+		update_option( 'everest_forms_admin_entry_approval_token', $evf_admin_entry_saved_token );
+
+		$evf_admin_approval_approved = $wpdb->query( $wpdb->prepare( "UPDATE {$wpdb->prefix}evf_entries SET status = %s WHERE entry_id = %d AND status <> %s", 'publish', $evf_admin_entry_id, 'publish' ) );
 		$entry                       = evf_get_entry( $evf_admin_entry_id );
 		$entry_meta                  = $entry->meta;
 		$first_name                  = '';
@@ -1937,14 +1941,10 @@ class EVF_Form_Task {
 		$subject = apply_filters( 'everest_forms_entry_submission_approval_subject', EVF_Admin_Entries::get_entry_status_email_subject( 'approval' ) );
 		$message = apply_filters( 'everest_forms_entry_approval_message', EVF_Admin_Entries::get_entry_status_email_message( 'approval', $name, $entry_date, $site_name ), $name, $entry_date, $site_name );
 
-		if ( EVF_Admin_Entries::is_entry_status_email_enabled( 'approval' ) ) {
+		if ( $evf_admin_approval_approved && EVF_Admin_Entries::is_entry_status_email_enabled( 'approval' ) ) {
 			$email_obj = new EVF_Emails();
 			$email_obj->send( $email, $subject, $message );
 		}
-
-		// Invalidate both the approve and deny links for this entry now that it has been actioned.
-		unset( $evf_admin_entry_saved_token[ $evf_approval_key ], $evf_admin_entry_saved_token[ 'denial_token_' . $evf_admin_entry_id ] );
-		update_option( 'everest_forms_admin_entry_approval_token', $evf_admin_entry_saved_token );
 
 		wp_redirect( $evf_entry_redirect_url );
 		exit;
@@ -1994,7 +1994,11 @@ class EVF_Form_Task {
 			wp_die( esc_html__( 'This denial link is invalid or has already been used.', 'everest-forms' ), '', array( 'response' => 403, 'back_link' => true ) );
 		}
 
-		$evf_admin_approval_denied = $wpdb->query( $wpdb->prepare( "UPDATE {$wpdb->prefix}evf_entries SET status = %s WHERE entry_id = %d ", 'denied', $evf_admin_entry_id ) );
+		// Invalidate both the approve and deny links for this entry before acting on it.
+		unset( $evf_admin_entry_saved_token[ $evf_denial_key ], $evf_admin_entry_saved_token[ 'approval_token_' . $evf_admin_entry_id ] );
+		update_option( 'everest_forms_admin_entry_approval_token', $evf_admin_entry_saved_token );
+
+		$evf_admin_approval_denied = $wpdb->query( $wpdb->prepare( "UPDATE {$wpdb->prefix}evf_entries SET status = %s WHERE entry_id = %d AND status <> %s", 'denied', $evf_admin_entry_id, 'denied' ) );
 		$entry                     = evf_get_entry( $evf_admin_entry_id );
 		$entry_meta                = $entry->meta;
 		$entry_date                = $entry->date_created;
@@ -2036,14 +2040,10 @@ class EVF_Form_Task {
 		$subject = apply_filters( 'everest_forms_entry_submission_denial_subject', EVF_Admin_Entries::get_entry_status_email_subject( 'denial' ) );
 		$message = apply_filters( 'everest_forms_entry_denial_message', EVF_Admin_Entries::get_entry_status_email_message( 'denial', $name, $entry_date, $site_name ), $name, $entry_date, $site_name );
 
-		if ( EVF_Admin_Entries::is_entry_status_email_enabled( 'denial' ) ) {
+		if ( $evf_admin_approval_denied && EVF_Admin_Entries::is_entry_status_email_enabled( 'denial' ) ) {
 			$email_obj = new EVF_Emails();
 			$email_obj->send( $email, $subject, $message );
 		}
-
-		// Invalidate both the approve and deny links for this entry now that it has been actioned.
-		unset( $evf_admin_entry_saved_token[ $evf_denial_key ], $evf_admin_entry_saved_token[ 'approval_token_' . $evf_admin_entry_id ] );
-		update_option( 'everest_forms_admin_entry_approval_token', $evf_admin_entry_saved_token );
 
 		wp_redirect( $evf_entry_redirect_url );
 		exit;

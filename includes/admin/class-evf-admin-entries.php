@@ -544,7 +544,7 @@ class EVF_Admin_Entries {
 			$subject = apply_filters( 'everest_forms_entry_submission_approval_subject', self::get_entry_status_email_subject( 'approval' ) );
 			$message = apply_filters( 'everest_forms_entry_approval_message', self::get_entry_status_email_message( 'approval', $name, $entry_date, $site_name ), $name, $entry_date, $site_name );
 
-			if ( ! $is_bulk_action && self::is_entry_status_email_enabled( 'approval' ) ) {
+			if ( $update && ! $is_bulk_action && self::is_entry_status_email_enabled( 'approval' ) ) {
 				$email_obj = new EVF_Emails();
 				$email_obj->send( $email, $subject, $message );
 			}
@@ -601,7 +601,7 @@ class EVF_Admin_Entries {
 			$subject = apply_filters( 'everest_forms_entry_submission_denial_subject', self::get_entry_status_email_subject( 'denial' ) );
 			$message = apply_filters( 'everest_forms_entry_denial_message', self::get_entry_status_email_message( 'denial', $name, $entry_date, $site_name ), $name, $entry_date, $site_name );
 
-			if ( ! $is_bulk_action && self::is_entry_status_email_enabled( 'denial' ) ) {
+			if ( $update && ! $is_bulk_action && self::is_entry_status_email_enabled( 'denial' ) ) {
 				$email_obj = new EVF_Emails();
 				$email_obj->send( $email, $subject, $message );
 			}
