@@ -142,9 +142,12 @@ class EVF_Field_Wysiwyg extends EVF_Form_Fields {
 		 * @param array $form_data All Form Data.
 		 */
 	public function field_display( $field, $field_atts, $form_data ) {
-		$value = '';
+		$value  = '';
+		$posted = isset( $_POST['everest_forms']['id'], $_POST['everest_forms']['form_fields'][ $field['id'] ], $form_data['id'] ) && absint( $_POST['everest_forms']['id'] ) === absint( $form_data['id'] ) ? wp_unslash( $_POST['everest_forms']['form_fields'][ $field['id'] ] ) : null; // phpcs:ignore WordPress.Security.NonceVerification.Missing, WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
 
-		if ( isset( $field['properties']['inputs']['primary']['attr']['value'] ) ) {
+		if ( is_string( $posted ) ) {
+			$value = evf_sanitize_wysiwyg( $posted );
+		} elseif ( isset( $field['properties']['inputs']['primary']['attr']['value'] ) ) {
 			$value = evf_sanitize_textarea_field( $field['properties']['inputs']['primary']['attr']['value'] );
 		}
 
@@ -199,14 +202,14 @@ class EVF_Field_Wysiwyg extends EVF_Form_Fields {
 			'editor_class'  => 'evf-wysiwyg ' . implode( ' ', $primary['class'] ),
 			'textarea_name' => $primary['attr']['name'],
 		);
-		$encode_brackets = static function ( $content ) {
-			return str_replace( array( '[', ']' ), array( '&#91;', '&#93;' ), $content );
+		$encode_content = static function ( $content ) {
+			return str_replace( array( '[', ']', '"', "'" ), array( '&#91;', '&#93;', '&quot;', '&#039;' ), $content );
 		};
-		add_filter( 'the_editor_content', $encode_brackets, 99 );
+		add_filter( 'the_editor_content', $encode_content, 99 );
 		ob_start();
 		wp_editor( $value, $primary['id'], $settings );
 		$output = ob_get_clean();
-		remove_filter( 'the_editor_content', $encode_brackets, 99 );
+		remove_filter( 'the_editor_content', $encode_content, 99 );
 		echo $output; //phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
 		printf( '</div>' );
 	}
